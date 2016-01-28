@@ -1,0 +1,2023 @@
+/*\
+ *  Leafage
+ *  @version 0.0.0
+ *  @license MIT
+ *  @author A.S.
+\*/
+;(function () {
+
+    'use strict';
+
+
+    var v_info = {
+        'name' : 'Leafage',
+        'version' : '0.0.0',
+        'description' : 'Leafage is a JavaScript plugin for overlay a contents on the current page.',
+        'license' : 'MIT',
+        'author' : 'A.S.',
+        'repository' : 'https://github.com/asgirl/leafage'
+    };
+
+
+    var v_window = window,
+        v_document = document,
+        v_html = document.documentElement;
+
+
+    /*\
+     *  @param {*} data
+     *  @returns {Boolean} returns true if data is a object else return false
+    \*/
+    var f_isobject = function (data) {
+        return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call({})));
+    };
+
+    /*\
+     *  @param {*} data
+     *  @returns {Boolean} returns true if data is a array else return false
+    \*/
+    var f_isarray = function (data) {
+        return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call([])));
+    };
+
+    /*\
+     *  @param {*} data
+     *  @returns {Boolean} returns true if data is a function else return false
+    \*/
+    var f_isfunction = function (data) {
+        return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call(function () {})));
+    };
+
+    /*\
+     *  @param {Object}
+     *  @returns {Object} returns new object, if no arguments return empty object
+    \*/
+    var f_extend = function () {
+        var arg = arguments,
+            result = {};
+
+        if (!arg.length) {
+            return result;
+        };
+
+        for (var i = 0; i < arg.length; i++) {
+            if (!f_isobject(arg[i])) {
+                continue;
+            };
+
+            for (var key in arg[i]) {
+                if (!arg[i].hasOwnProperty(key)) {
+                    continue;
+                } else if (f_isobject(arg[i][key])) {
+                    result[key] = f_extend(result[key] || {}, arg[i][key]);
+                } else {
+                    result[key] = arg[i][key];
+                };
+            };
+        };
+
+        return result;
+    };
+
+    /*\
+     *  @param {*} data
+     *  @returns {Array} returns new array
+    \*/
+    var f_toarray = function (data) {
+        var is_empty = (!data || (data.length === 0)),
+            is_one = (!is_empty && !data.length),
+            result = [];
+
+        if (is_empty) {
+            return [];
+        } else if (is_one) {
+            return [nodes];
+        };
+
+        for (var i = 0, l = data.length; i < l; i++) {
+            result.push(data[i]);
+        };
+
+        return result;
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} add
+    \*/
+    var f_addclass = function (node, add) {
+        if (!node || (node.length === 0) || !add || (add.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (!f_isarray(add)) {
+            add = add.split(' ');
+        };
+
+        var list = '';
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            list = node[i].className.split(' ') || [];
+
+            for (var j = 0, k = add.length; j < k; j++) {
+                if (list.indexOf(add[j]) === -1) {
+                    list.push(add[j]);
+                };
+            };
+
+            node[i].className = list.join(' ');
+        };
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} remove
+    \*/
+    var f_removeclass = function (node, remove) {
+        if (!node || (node.length === 0) || !remove || (remove.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (!f_isarray(remove)) {
+            remove = remove.split(' ');
+        };
+
+        var list = '',
+            new_list = [];
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            list = node[i].className.split(' ') || [];
+
+            for (var j = 0, k = list.length; j < k; j++) {
+                if (remove.indexOf(list[j]) === -1) {
+                    new_list.push(list[j]);
+                };
+            };
+
+            node[i].className = new_list.join(' ');
+        };
+    };
+
+    /*\
+     *  @param {Node} node
+     *  @param {String|Array} find
+     *  @returns {Boolean} returns true if node has class and false if has not
+    \*/
+    var f_hasclass = function (node, find) {
+        if (!node || node.length || !find || (find.length === 0)) {
+            return false;
+        };
+
+        if (!f_isarray(find)) {
+            find = find.split(' ');
+        };
+
+        var list = node.className.split(' ') || [];
+
+        for (var i = 0, l = find.length; i < l; i++) {
+            if (list.indexOf(find[i]) === -1) {
+                return false;
+            };
+        };
+
+        return !!find.length;
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} type
+     *  @param {Function} handler
+    \*/
+    var f_addevent = function (node, type, handler) {
+        if (!node || (node.length === 0) || !type || (type.length === 0) || !handler) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (!f_isarray(type)) {
+            type = type.split(' ');
+        };
+
+        var method = (window.addEventListener) ? 1 : 2;
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            for (var j = 0, k = type.length; j < k; j++) {
+                if (method === 1) {
+                    node[i].addEventListener(type[j], handler, false);
+                } else {
+                    node[i].attachEvent('on'+ type[j], handler);
+                };
+            };
+        };
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} type
+     *  @param {Function} handler
+    \*/
+    var f_removeevent = function (node, type, handler) {
+        if (!node || (node.length === 0) || !type || (type.length === 0) || !handler) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (!f_isarray(type)) {
+            type = type.split(' ');
+        };
+
+        var method = (window.addEventListener) ? 1 : 2;
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            for (var j = 0, k = type.length; j < k; j++) {
+                if (method === 1) {
+                    node[i].removeEventListener(type[j], handler);
+                } else { 
+                    node[i].detachEvent('on'+ type[j], handler);
+                };
+            };
+        };
+    };
+
+    /*\
+     *  @param {Object} request
+     *  @returns {XMLHttpRequest} returns XMLHttpRequest
+    \*/
+    var f_ajax = function (request) {
+        request = request || {};
+
+        var result = new XMLHttpRequest();
+
+        result.open(request.method || 'get', request.url, request.async || true, request.username, request.userpass);
+
+        return result;
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {Node|Array|String} add
+    \*/
+    var f_addnode = function (node, add) {
+        if (!node || (node.length === 0) || !add || (add.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (add instanceof Node) {
+            add = [add];
+        };
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            if (f_isarray(add)) {
+                for (var j = 0, k = add.length; j < k; j++) {
+                    node[i].appendChild(add[j]);
+                };
+            } else {
+                node[i].insertAdjacentHTML('beforeend', add);
+            };
+        };
+    };
+
+    /*\
+     *  @param {Node|Array} node
+    \*/
+    var f_removenode = function (node) {
+        if (!node || (node.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            node[i].parentNode.removeChild(node[i]);
+        };
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {Node|Array|String} add
+    \*/
+    var f_beforenode = function (node, add) {
+        if (!node || (node.length === 0) || !add || (add.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        if (add instanceof Node) {
+            add = [add];
+        };
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            if (f_isarray(add)) {
+                for (var j = 0, k = add.length; j < k; j++) {
+                    node[i].parentNode.insertBefore(add[j], node[i]);
+                };
+            } else {
+                node[i].insertAdjacentHTML('beforebegin', add);
+            };
+        };
+    };
+
+    /*\
+     *  @param {Node|Array} node
+    \*/
+    var f_empty = function (node) {
+        if (!node || (node.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(node)) {
+            node = [node];
+        };
+
+        var children = [];
+
+        for (var i = 0, l = node.length; i < l; i++) {
+            children = node[i].childNodes;
+
+            for (var j = 0, k = children.length; j < k; j++) {
+                node[i].removeChild(children[j]);
+            };
+        };
+    };
+
+    /*\
+     *  @param {String} selector
+     *  @returns {Node} returns fined node
+    \*/
+    var f_getnode = function (selector) {
+        if (!selector) {
+            return null;
+        };
+
+        return v_document.querySelector(selector);
+    };
+
+    /*\
+     *  @param {String} selector
+     *  @returns {Array} returns all fined nodes
+    \*/
+    var f_getnodes = function (selector) {
+        if (!selector) {
+            return null;
+        };
+
+        return f_toarray(v_document.querySelectorAll(selector));
+    };
+
+    /*\
+     *  @param {Node} node
+     *  @param {String} selector
+     *  @returns {Node} returns fined node
+    \*/
+    var f_findnode = function (node, selector) {
+        if (!node || (node.length === 0) || !selector) {
+            return null;
+        };
+
+        return node.querySelector(selector);
+    };
+
+    /*\
+     *  @param {Node} node
+     *  @param {String} selector
+     *  @returns {Array} returns fined nodes
+    \*/
+    var f_findnodes = function (node, selector) {
+        if (!node || (node.length === 0) || !selector) {
+            return null;
+        };
+
+        return f_toarray(node.querySelectorAll(selector));
+    };
+
+    /*\
+     *  @param {Function} func
+     *  @param {Number} delay
+     *  @returns {Number} returns timeout number
+    \*/
+    var f_delay = function (func, delay) {
+        if (!func) {
+            return;
+        };
+
+        var arg = arguments;
+
+        return setTimeout(function () {
+            func.apply(null, Array.prototype.slice.call(arg, 2));
+        }, delay);
+    };
+
+
+    /*\
+     *  @param {String} string
+     *  @returns {String} returns clear string
+    \*/
+    var f_string_clear = function (string) {
+        return string.replace(/[^a-z0-9_\-\.]+/ig, '').replace(/[\-\.]/g, '_');
+    };
+
+    /*\
+     *  @param {Number} n
+     *  @returns {String} returns new genereted string with length n
+    \*/
+    var v_gstring_stack = [];
+    var v_gstring_create = function (n) {
+        var chars = 'abcdefghijklmnopqrstuvwxyz',
+            l = chars.length - 1,
+            result = '';
+
+        if (!n) {
+            return result;
+        };
+
+        for (var i = 0; i < n; i++) {
+            result += chars[Math.round(Math.random() * l)];
+        };
+
+        if (v_gstring_stack.indexOf(result) !== -1) {
+            return v_gstring_create(n);
+        } else {
+            v_gstring_stack.push(result);
+
+            return result;
+        };
+    };
+
+    /*\
+     *  @param {String} string
+     *  @returns {DocumentFragment} returns document fragment with nodes
+    \*/
+    var f_string_to_fragment = function (string) {
+        var fragment = v_document.createDocumentFragment(),
+            node = v_document.createElement('div');
+
+        node.innerHTML = string;
+
+        var scripts = f_findnodes(node, 'script');
+
+        for (var i = 0, l = scripts.length; i < l; i++) {
+            f_beforenode(scripts[i], f_script_node_convert(scripts[i]));
+        };
+
+        var children = node.childNodes;
+
+        for (var j = 0, k = children.length; j < k; j++) {
+            fragment.appendChild(children[j]);
+        };
+
+        return fragment;
+    };
+
+    /*\
+     *  @param {String} string
+     *  @returns {Array} returns array with nodes
+    \*/
+    var f_string_to_node = function (string) {
+        var node = v_document.createElement('div');
+
+        node.innerHTML = string;
+
+        var scripts = f_findnodes(node, 'script');
+        
+        for (var i = 0, l = scripts.length; i < l; i++) {
+            f_beforenode(scripts[i], f_script_node_convert(scripts[i]));
+        };
+
+        return f_toarray(node.childNodes);
+    };
+
+    /*\
+     *  @param {Node} node
+     *  @returns {Node} returns new script node
+    \*/
+    var f_script_node_convert = function (node) {
+        if (node.nodeName.toLowerCase() !== 'script') {
+            return node;
+        };
+
+        var script,
+            script_attr;
+
+        script = document.createElement('script');
+        script.innerHTML = node.innerHTML;
+        script_attr = node.attributes;
+
+        for (var i = 0, l = script_attr.length; i < l; i++) {
+            script.setAttribute(script_attr[i].nodeName, script_attr[i].nodeValue);
+        };
+
+        return script;
+    };
+
+    /*\
+     *  @param {Array} data
+     *  @param {String|Number} marker
+     *  @returns {String} returns value from data by marker
+    \*/
+    var f_array_get_item = function (data, marker) {
+        if (!data.length) {
+            return;
+        };
+
+        if (data.indexOf(marker) !== -1) {
+            return marker;
+        };
+
+        if (marker === 'first') {
+            marker = data[0];
+        } else if (marker === 'last') {
+            marker = data[data.length - 1];
+        } else if ((typeof marker === 'number') && (marker >= 0) && (marker < data.length)) {
+            marker = data[marker];
+        } else {
+            marker = undefined;
+        };
+
+        return marker;
+    };
+
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} add_before
+     *  @param {String|Array} remove_before
+     *  @param {String|Array} add_after
+     *  @param {String|Array} remove_after
+     *  @param {Number} delay
+     *  @param {Function} callback
+    \*/
+    var f_animation_set = function (node, add_before, remove_before, add_after, remove_after, delay, callback) {
+        var current = node.className,
+            after = function () {
+                f_addclass(node, add_after);
+                f_removeclass(node, remove_after);
+
+                if (callback) {
+                    callback();
+                };
+            };
+
+        f_addclass(node, add_before);
+        f_removeclass(node, remove_before);
+
+        if (delay > 0) {
+            f_delay(after, delay);
+        } else {
+            after();
+        };
+    };
+
+    /*\
+     *  @param {String} url
+     *  @param {String} type
+     *  @param {Object} property
+     *  @param {Fuction} callback
+     *  @returns {Image|XMLHttpRequest} returns Image if type is 'image' and XMLHttpRequest if type is 'ajax'
+    \*/
+    var f_content_load = function (url, type, property, callback) {
+        var request,
+            unbind = function () {
+                f_removeevent(request, 'load', success);
+                f_removeevent(request, 'error', error);
+            },
+            success = function (event) {
+                if (request.status && request.status !== 200) {
+                    return error();
+                };
+
+                unbind();
+
+                if (callback) {
+                    callback('success', request, Date.now());
+                };
+            },
+            error = function (event) {
+                unbind();
+
+                if (callback) {
+                    callback('error', event);
+                };
+            },
+            cancel = function () {};
+
+        switch (type) {
+            case 'ajax' :
+                cancel = function (event) {
+                    unbind();
+
+                    request.abort();
+                    request = null;
+
+                    if (callback) {
+                        callback('abort');
+                    };
+                };
+
+                property.url = url;
+
+                request = f_ajax(property);
+
+                f_addevent(request, 'load', success);
+                f_addevent(request, 'error', error);
+
+                request.send();
+
+                break;
+
+            case 'image' :
+                cancel = function (event) {
+                    unbind();
+
+                    request.src = '';
+                    request = null;
+
+                    if (callback) {
+                        callback('abort');
+                    };
+                };
+
+                request = document.createElement('img');
+
+                f_addevent(request, 'load', success);
+                f_addevent(request, 'error', error);
+
+                request.src = url;
+
+                break;
+
+            default :
+                if (callback) {
+                    callback('success', null, Date.now());
+                };
+
+                return null;
+
+                break;
+        };
+
+        request.cancel = cancel;
+
+        return request;
+    };
+
+
+    var v_name = {
+        'prefix' : 'leafage',
+        'attr_window' : 'data-leafage-window', // attribute contain window id
+        'attr_id' : 'data-leafage-id', // attribute contain element id
+        'attr_url' : 'data-leafage-url', // attribute contain element url
+        'attr_title' : 'data-leafage-title', // attribute contain element title
+        'attr_content' : 'data-leafage-content', // attribute contain element content
+        'attr_type' : 'data-leafage-type', // attribute contain element type
+        'attr_group' : 'data-leafage-group', // attribute contain element group
+        'sel_window' : 'e-window', // selector for main node, contain all nodes
+        'sel_wrapper' : 'e-wrapper', // selector for wrapper node
+        'sel_title' : 'e-title', // selector for node where place a title
+        'sel_content' : 'e-content', // selector for node where place a content
+        'sel_close' : 'e-close', // selector for close buttons
+        'sel_prev' : 'e-prev', // selector for prev buttons
+        'sel_next' : 'e-next', // selector for next buttons
+        'sel_touch' : 'e-touch', // selector for touch layer
+        'sel_accept' : 'e-accept', // selector for accept buttons
+        'sel_cancel' : 'e-cancel', // selector for cancel buttons
+        'class_block' : 'f-pageblock', // set when need to block body
+        'class_enabled' : 'f-enabled', // set enabled state
+        'class_disabled' : 'f-disabled', // set disabled state
+        'class_active' : 'f-active', // set when window not hide
+        'class_inactive' : 'f-inactive', // set when window hide
+        'class_open' : 'f-open', // set when start open window
+        'class_close' : 'f-close', // set when start close window
+        'class_show' : 'f-show', // set when start show window
+        'class_hide' : 'f-hide', // set when start hide window
+        'class_prev' : 'f-prev', // set when start set prev element
+        'class_next' : 'f-next', // set when start set next element
+        'class_ready' : 'f-ready', // set when start set element in first time
+        'class_load' : 'f-loading', // set when start loading
+        'class_error' : 'f-error' // set when loading error
+    };
+
+
+    var v_text = {
+        'general' : {
+            'success' : 'Everything okay',
+            'error' : 'Something wrong',
+            'txt_prev' : 'Prev',
+            'txt_next' : 'Next',
+            'txt_close' : 'Close'
+        }
+    };
+
+    var f_text_add = function (name, data) {
+        if (!name || (name === 'general')) {
+            return null;
+        };
+
+        name = 'c_'+ f_string_clear(name);
+
+        v_text[name] = f_extend(v_text.general, data);
+
+        return v_text[name];
+    };
+
+    var f_text_get = function (name) {
+        if (name && (name !== 'general')) {
+            name = 'c_'+ f_string_clear(name);
+        };
+
+        if (!v_text[name]) {
+            return null;
+        } else {
+            return v_text[name];
+        };
+    };
+
+    var f_text_get_value = function (name, prop) {
+        if (name !== 'general') {
+            name = 'c_'+ f_string_clear(name);
+        };
+
+        if (!v_text[name]) {
+            name = 'general';
+        };
+
+        return v_text[name][prop];
+    };
+
+    var f_text_get_list = function () {
+        var list = [];
+
+        for (var key in v_text) {
+            list.push((key !== 'general') ? key.slice(2) : key);
+        };
+
+        return list;
+    };
+
+
+    var v_mod = {
+        'general' : {
+            'mod' : 'general', // {String} mod name
+            'lang' : 'general', // {String} text lang
+            'bindto' : 'body', // {String|Node} node for place a window
+            'makeMultiUrl' : true, // {Boolean} may contain several urls in one string
+            'makeTypeDetect' : true, // {Boolean} auto detect load type
+            'makeGrouping' : true, // {Boolean} group elements
+            'makeCombine' : true, // {Boolean} combine elements for navigation
+            'makeBlockPage' : true, // {Boolean} block body when window open
+            'makeTail' : true, // {Boolean} add open window tot tail
+            'makeLoop' : false, // {Boolean} loop navigation
+            'makeCasheReset' : false, // {Boolean} reset request cashe
+            'makeEventBind' : false, // {Boolean} bind events
+            'classBody' : '',
+            'classWindow' : '',
+            'urlAttr' : v_name.attr_url, // {String} default attribute for url
+            'titleAttr' : v_name.attr_title, // {String} default attribute for title
+            'contentAttr' : v_name.attr_content, // {String} default attribute for content
+            'type' : 'ajax', // {String} default load type 'ajax|find|iframe|image|html'
+            'typeAttr' : v_name.attr_type, // {String} default attribute for load type
+            'group' : 'g', // {String} default group name
+            'groupAttr' : v_name.attr_group, // {String} default attribute for group name
+            'ajaxProperty' : {}, // {Object} options for ajax request
+            'timeSave' : 60000, // {Number} keep result
+            'template' : '<div class="leafage e-window"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div></div><div class="leafage-preloader"></div></div>', // {string} template
+            'onAccept' : null, // {Function} calls on an accept button click
+            'onCancel' : null // {Function} calls on a cancel button click
+        }
+    };
+
+    var f_mod_add = function (name, data) {
+        if (name === 'general') {
+            return false;
+        };
+
+        name = 'c_'+ f_string_clear(name);
+
+        v_mod[name] = f_extend({}, data);
+
+        return v_mod[name];
+    };
+
+    var f_mod_get = function (name, data) {
+        data = data || {};
+
+        if (name && (name !== 'general')) {
+            name = 'c_'+ f_string_clear(name);
+        };
+
+        if (!name || (name === 'general')) {
+            return f_extend(v_mod.general, data);
+        } else {
+            return f_extend(v_mod.general, v_mod[name], data);
+        };
+    };
+
+    var f_mod_get_list = function () {
+        var list = [];
+
+        for (var key in v_mod) {
+            list.push((key !== 'general') ? key.slice(2) : key);
+        };
+
+        return list;
+    };
+
+
+    var v_tail = [];
+
+    var v_tail_current = '';
+
+    var f_tail_add = function (id) {
+        v_tail_current = id;
+        
+        v_tail.push(id);
+
+        return true;
+    };
+
+    var f_tail_remove = function (id) {
+        var new_tail = [];
+
+        for (var i = 0, l = v_tail.length; i < l; i++) {
+            if (id !== v_tail[i]) {
+                new_tail.push(v_tail[i]);
+            };
+        };
+
+        v_tail = new_tail;
+        v_tail_current = (v_tail.length) ? v_tail[v_tail.length - 1] : '';
+
+        return true;
+    };
+
+    var f_tail_get_list = function () {
+        return v_tail;
+    };
+
+
+    var v_blockpage = 0;
+
+
+    var v_element = {
+        'id' : '',
+        'is_get' : false,
+        'is_error' : false,
+        'is_active' : false,
+        'is_loading' : false,
+        'is_bind' : false,
+        'timestamp' : 0,
+        'url' : '',
+        'title' : '',
+        'content' : '',
+        'type' : '',
+        'group' : '',
+        'node' : null,
+        'source' : null
+    };
+
+    var v_element_stack = {};
+
+    var f_element_create = function (data) {
+        data.id = v_gstring_create(16);
+
+        v_element_stack[data.id] = f_extend(v_element, data);
+
+        return v_element_stack[data.id];
+    };
+
+    var f_element_get = function (id) {
+        var result = [];
+
+        if (f_isarray(id)) {
+            for (var i = 0, l = id.length; i < l; i++) {
+                result.push(v_element_stack[id[i]]);
+            };
+
+            return result;
+        } else {
+            return v_element_stack[id];
+        };
+    };
+
+    var f_element_type_detect = function (l_element, type) {
+        if (!l_element.url) {
+            return;
+        } else if (/^(http(s)?\:)?\/\/(www\.)?(youtu\.be)/i.test(l_element.url)) {
+            l_element.url = '//www.youtube.com/embed/'+ l_element.url.match(/([^\/]*)$/)[0];
+
+            if (type !== 'iframe') {
+                l_element.type = 'iframe';
+            };
+        } else if (/^(http(s)?\:)?\/\/(www\.)?(vimeo\.com)/i.test(l_element.url)) {
+            l_element.url = '//player.vimeo.com/video/'+ l_element.url.match(/([^\/]*)$/)[0];
+
+            if (type !== 'iframe') {
+                l_element.type = 'iframe';
+            };
+        } else if (l_element.type) {
+            return;
+        } else if (l_element.content) {
+            if (type !== 'html') {
+                l_element.type = 'html';
+            };
+        } else if (/^\w*\#/.test(l_element.url)) {
+            if (type !== 'find') {
+                l_element.type = 'find';
+            };
+        } else if (/\.(bmp|gif|jp(e)?g|png|svg|tif(f)?|webp)(?:\?.*)?$/i.test(l_element.url)) {
+            if (type !== 'image') {
+                l_element.type = 'image';
+            };
+        } else if (/\.(3gp|mp3|mp4|og(g|v)|pdf|wav|webm|wmv)(?:\?.*)?$/i.test(l_element.url)) {
+            if (type !== 'iframe') {
+                l_element.type = 'iframe';
+            };
+        } else {
+            if ((type === 'find') || (type === 'html')) {
+                l_element.type = 'ajax';
+            };
+        };
+    };
+
+    var f_element_load = function (l_element, l_options, callback) {
+        var type = l_element.type || l_options.type;
+
+        //get content if need
+        if (!l_element.is_get || (l_element.timestamp && (Date.now() - l_element.timestamp > l_options.timeSave))) {
+            l_element.is_get = false;
+            l_element.is_error = false;
+
+            switch (type) {
+                case 'ajax' :
+                case 'image' :
+                    l_element.source = f_content_load(
+                        l_element.url + (l_options.makeCasheReset ? (/(\?.*)$/.test(l_element.url) ? '&' : '?') + Date.now() : ''), type, l_options.ajaxProperty,
+                        function (result, data, timestamp) {
+                            if (result === 'success') {
+                                // save content
+                                if (type === 'ajax') {
+                                    l_element.content = f_string_to_node(data.responseText);
+                                } else {
+                                    l_element.content = l_element.source;
+                                };
+
+                                l_element.timestamp = timestamp;
+
+                                l_element.is_get = true;
+                            } else if (result === 'error') {
+                                l_element.content = f_text_get_value(l_options.lang, 'error');
+
+                                l_element.is_error = true;
+                            };
+
+                            l_element.is_loading = false;
+
+                            if (callback) {
+                                callback(result);
+                            };
+                        }
+                    );
+
+                    l_element.is_loading = true;
+
+                    break;
+
+                case 'find' :
+                    // save content
+                    l_element.content = document.getElementById(l_element.url.slice(1));
+                    l_element.source = document.createElement('div');
+
+                    if (l_element.content) {
+                        l_element.is_get = true;
+                    } else {
+                        l_element.content = f_text_get_value(l_options.lang, 'error');
+
+                        l_element.is_error = true;
+                    };
+
+                    break;
+
+                case 'iframe' :
+                    // save content
+                    l_element.content = document.createElement('iframe');
+                    l_element.content.src = l_element.url;
+
+                    l_element.content.setAttribute('allowfullscreen', true);
+
+                    l_element.is_get = true;
+
+                    break;
+
+                case 'html' :
+                    // save content
+                    if (typeof l_element.content === 'string') {
+                        l_element.content = f_string_to_node(l_element.content);
+                    } else {
+                        l_element.content = f_toarray(l_element.content);
+                    };
+
+                    l_element.is_get = true;
+
+                    break;
+            };
+        };
+
+        if (!l_element.is_loading) {
+            if (callback) {
+                callback((l_element.is_error) ? 'error' : 'success');
+            };
+        };
+    };
+
+    var f_elements_create = function (data, nodes, options) {
+        var prop = {},
+            url_list,
+            result = [];
+
+        for (var i = 0, l = Math.max(data.length, nodes.length); i < l; i++) {
+            if (nodes[i]) {
+                if (nodes[i].hasAttribute(options.urlAttr)) {
+                    prop.url = nodes[i].getAttribute(options.urlAttr);
+                };
+                if (nodes[i].hasAttribute(options.titleAttr)) {
+                    prop.title = nodes[i].getAttribute(options.titleAttr);
+                };
+                if (nodes[i].hasAttribute(options.typeAttr)) {
+                    prop.type = nodes[i].getAttribute(options.typeAttr);
+                };
+                if (nodes[i].hasAttribute(options.groupAttr)) {
+                    prop.group = nodes[i].getAttribute(options.groupAttr);
+                };
+
+                prop.node = nodes[i];
+            };
+
+            if (data[i]) {
+                if (data[i].url) {
+                    prop.url = data[i].url;
+                };
+                if (data[i].title) {
+                    prop.title = data[i].title;
+                };
+                if (data[i].content) {
+                    prop.content = data[i].content;
+                };
+                if (data[i].type) {
+                    prop.type = data[i].type;
+                };
+                if (data[i].group) {
+                    prop.group = data[i].group;
+                };
+            };
+
+            if (prop.url) {
+                prop.url = prop.url.replace(/(^\s+)|(\s+$)/g, '');
+            };
+            if (prop.group) {
+                prop.group = 'c_'+ f_string_clear(prop.group);
+            };
+
+            if (options.makeMultiUrl && prop.url) {
+                url_list = prop.url.split(',');
+
+                delete prop.content;
+
+                for (var j = 0, k = url_list.length; j < k; j++) {
+                    prop.url = url_list[j].replace(/(^\s+)|(\s+$)/g, '');
+
+                    result.push(f_element_create(prop));
+
+                    if (!j) {
+                        delete prop.node;
+                    };
+                };
+            } else {
+                result.push(f_element_create(prop));
+            };
+
+            prop = {};
+        };
+
+        return result;
+    };
+
+
+    var v_window = {
+        'id' : '',
+        'is_enabled' : true,
+        'is_init' : false,
+        'is_open' : false,
+        'is_ready' : false,
+        'is_active' : false,
+        'is_loading' : false,
+        'is_set' : false,
+        'is_first' : false,
+        'is_last' : false,
+        'is_bind' : false,
+        'group' : '',
+        'elements' : [],
+        'elements_total' : 0,
+        'element_current' : '',
+        'element_current_index' : 0,
+        'element_pre' : '',
+        'element_pre_index' : 0,
+        'options' : {}
+    };
+
+    var v_window_stack = {};
+
+    var f_window_create = function (data) {
+        data = data || {};
+
+        data.id = v_gstring_create(8);
+
+        v_window_stack[data.id] = f_extend(v_window, data);
+
+        return v_window_stack[data.id];
+    };
+
+    var f_window_get = function (id) {
+        return v_window_stack[id];
+    };
+
+    var f_window_template_create = function (l_window, l_options) {
+        // localize template
+        var template_source = l_options.template.replace(
+            /\{\{\s?(\w+)\s?\}\}/g,
+            function (s, a) {
+                var value = f_text_get_value(l_options.lang, a);
+                return (value) ? value : '';
+            }
+        );
+
+        // create node structure
+        var template = f_string_to_fragment(template_source);
+
+        l_window.node_window = f_findnode(template, '.'+ v_name.sel_window);
+        l_window.node_wrapper = f_findnode(template, '.'+ v_name.sel_wrapper);
+        l_window.node_title = f_findnode(template, '.'+ v_name.sel_title);
+        l_window.node_content = f_findnode(template, '.'+ v_name.sel_content);
+        l_window.node_prev = f_findnodes(template, '.'+ v_name.sel_prev);
+        l_window.node_next = f_findnodes(template, '.'+ v_name.sel_next);
+
+        l_window.node_place = f_getnode(l_options.bindto);
+
+        // delete nav buttons if navigation not need
+        if (!l_options.makeCombine) {
+            if (l_window.node_prev) {
+                f_removenode(l_window.node_prev);
+            };
+            if (l_window.node_next) {
+                f_removenode(l_window.node_next);
+            };
+        };
+    };
+
+    var f_window_navigation_update = function (l_window, l_options) {
+        // set classes for navigation
+        if (!l_options.makeLoop) {
+            if (l_window.is_first) {
+                f_addclass(l_window.node_prev, v_name.class_disabled);
+            } else {
+                f_removeclass(l_window.node_prev, v_name.class_disabled);
+            };
+            if (l_window.is_last) {
+                f_addclass(l_window.node_next, v_name.class_disabled);
+            } else {
+                f_removeclass(l_window.node_next, v_name.class_disabled);
+            };
+        };
+    };
+
+    var f_window_open = function (l_window, l_options) {
+        if (l_window.is_open) {
+            return;
+        };
+
+        // change tail if need
+        if (l_options.makeTail) {
+            f_tail_add(l_window.id);
+        };
+
+        // block body if need
+        if (l_options.makeBlockPage) {
+            if (!v_blockpage) {
+                f_addclass(v_html, v_name.class_block);
+            };
+            
+            v_blockpage++;
+        };
+
+        // add node to page
+        f_addnode(l_window.node_place, l_window.node_window);
+
+        // set active class
+        f_addclass(l_window.node_window, v_name.class_active);
+
+        l_window.is_active = true;
+        l_window.is_open = true;
+    };
+
+    var f_window_close = function (l_window, l_options) {
+        if (!l_window.is_open) {
+            return;
+        };
+
+        // change tail if need
+        if (l_options.makeTail) {
+            f_tail_remove(l_window.id);
+        };
+
+        // unblock body if need
+        if (l_options.makeBlockPage && l_window.is_active) {
+            v_blockpage--;
+
+            if (!v_blockpage) {
+                f_removeclass(v_html, v_name.class_block);
+            };
+        };
+
+        // remove node from page
+        f_removenode(l_window.node_window);
+
+        // unset active class
+        f_removeclass(l_window.node_window, v_name.class_active);
+
+        l_window.is_active = false;
+        l_window.is_open = false;
+    };
+
+    var f_window_show = function (l_window, l_options) {
+        if (l_window.is_active) {
+            return;
+        };
+
+        // change tail if need
+        if (l_options.makeTail) {
+            // hide prev window
+            if (v_tail_current && (v_tail_current !== l_window.id)) {
+                leafage_object.create(v_tail_current).hide();
+            };
+
+            // set current
+            v_tail_current = l_window.id;
+        };
+
+        // block body if need
+        if (l_options.makeBlockPage) {
+            if (!v_blockpage) {
+                f_addclass(v_html, v_name.class_block);
+            };
+
+            v_blockpage++;
+        };
+
+        // unset inactive class
+        f_removeclass(l_window.node_window, v_name.class_inactive);
+
+        // unset active class
+        f_addclass(l_window.node_window, v_name.class_active);
+
+        l_window.is_active = true;
+    };
+
+    var f_window_hide = function (l_window, l_options) {
+        if (!l_window.is_active) {
+            return;
+        };
+
+        // change tail if need
+        if (l_options.makeTail) {
+            // set current
+            v_tail_current = '';
+        };
+
+        // unblock body if need
+        if (l_options.makeBlockPage) {
+            v_blockpage--;
+
+            if (!v_blockpage) {
+                f_removeclass(v_html, v_name.class_block);
+            };
+        };
+
+        // unset active class
+        f_removeclass(l_window.node_window, v_name.class_active);
+
+        // unset inactive class
+        f_addclass(l_window.node_window, v_name.class_inactive);
+
+        l_window.is_active = false;
+    };
+
+    var f_window_set = function (l_window, l_element, l_options) {
+        if (l_element.is_active) {
+            return;
+        };
+
+        var type = l_element.type || l_options.type;
+
+        // check error status
+        if (l_element.is_error) {
+            // set error classs
+            f_addclass(l_window.node_window, v_name.class_error);
+        } else {
+            // add helper node
+            if (type === 'find') {
+                f_beforenode(l_element.content, l_element.source);
+            };
+
+            // add title to window
+            f_addnode(l_window.node_title, l_element.title);
+        };
+
+        // add content to window
+        f_addnode(l_window.node_content, l_element.content);
+
+        l_element.is_active = true;
+        l_window.is_set = true;
+    };
+
+    var f_window_unset = function (l_window, l_element, l_options) {
+        if (!l_element.is_active) {
+            return;
+        };
+
+        var type = l_element.type || l_options.type;
+
+        // check error status
+        if (l_element.is_error) {
+            // unset error class
+            f_removeclass(l_window.node_window, v_name.class_error);
+        } else {
+            // remove helper node
+            if (type === 'find') {
+                f_beforenode(l_element.source, l_element.content);
+                f_removenode(l_element.source);
+            };
+
+            // clear title nodes
+            f_empty(l_window.node_title);
+        };
+
+        // clear content nodes
+        f_empty(l_window.node_content);
+
+        l_element.is_active = false;
+        l_window.is_set = false;
+    };
+
+
+    var leafage_object = function () {
+        var that = this,
+            arg = arguments;
+
+        // recreate if leafage_object was init without new
+        if (!(that instanceof leafage_object)) {
+            return new leafage_object('FLAG_RECREATE', arg);
+        } else if (arg[0] && (arg[0] === 'FLAG_RECREATE')) {
+            arg = arg[1];
+        };
+
+        that.stack = [];
+
+        // return empty leafage_object if no arguments
+        if (!arg.length) {
+            return that;
+        };
+
+        // find arguments
+        var data = [],
+            prop = {},
+            nodes = [];
+
+        for (var i = 0, l = Math.min(4, arg.length); i < l; i++) {
+            if (!arg[i]) {
+                continue;
+            } else if (f_isarray(arg[i])) {
+                data = arg[i];
+            } else if ((arg[i] instanceof Node) || (arg[i][0] instanceof Node)) {
+                nodes = f_toarray(arg[i]);
+            } else if (f_isobject(arg[i])) {
+                prop = arg[i];
+            };
+        };
+
+        // create options
+        var l_options = f_mod_get(prop.mod, prop);
+
+        l_options.group = 'c_'+ f_string_clear(l_options.group);
+        l_options.makeLocalWait = (l_options.makeTail) ? false : l_options.makeLocalWait;
+
+        // create elements
+        var l_elements = f_elements_create(data, nodes, l_options);
+
+        // separation of the elements
+        var groups = {},
+            group = '';
+
+        if (l_options.makeGrouping) {
+            for (var j = 0, k = l_elements.length; j < k; j++) {
+                group = l_elements[j].group || l_options.group;
+
+                if (!groups[group]) {
+                    groups[group] = [];
+                };
+
+                groups[group].push(l_elements[j].id);
+            };
+        } else {
+            groups[l_options.group] = [];
+
+            for (var j = 0, k = l_elements.length; j < k; j++) {
+                groups[l_options.group].push(l_elements[j].id);
+            };
+        };
+
+        // create window for each group
+        var l_window;
+
+        for (group in groups) {
+            if (!groups.hasOwnProperty(group)) {
+                continue;
+            };
+            
+            l_window = f_window_create({
+                'group' : group,
+                'elements' : groups[group],
+                'elements_total' : groups[group].length,
+                'options' : l_options
+            });
+
+            that.stack.push(l_window.id);
+        };
+
+        that.init();
+
+        return that;
+    };
+
+    leafage_object.prototype.get = function (marker) {
+        var that = this;
+
+        if (that.stack.length < 2) {
+            return that;
+        } else {
+            marker = f_array_get_item(that.stack, marker);
+
+            return leafage_object.create(marker);
+        };
+    };
+
+    leafage_object.prototype.each = function (func, arg) {
+        var that = this;
+
+        if (f_isfunction(func)) {
+            for (var i = 0, l = that.stack.length; i < l; i++) {
+                func.apply(that.get(i), arg);
+            };
+        };
+
+        return that;
+    };
+
+    leafage_object.prototype.info = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.info, arguments);
+        };
+
+        return f_window_get(that.stack[0]);
+    };
+
+    leafage_object.prototype.init = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.init, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options,
+            l_elements = f_element_get(l_window.elements);
+
+        f_window_template_create(l_window, l_options);
+
+        l_window.bind_click = function (event) {
+            var node = event.target;
+
+            if (f_hasclass(node, v_name.sel_close)) {
+                that.close();
+            } else if (f_hasclass(node, v_name.sel_prev)) {
+                that.prev();
+            } else if (f_hasclass(node, v_name.sel_next)) {
+                that.next();
+            } else if (f_hasclass(node, v_name.sel_accept)) {
+                if (l_options.onAccept) {
+                    l_options.onAccept();
+                };
+            } else if (f_hasclass(node, v_name.sel_cancel)) {
+                if (l_options.onCancel) {
+                    l_options.onCancel();
+                };
+            };
+        };
+
+        f_addevent(l_window.node_window, 'click', l_window.bind_click);
+
+        for (var j = 0, k = l_window.elements_total; j < k; j++) {
+            if (l_elements[j].node) {
+                l_elements[j].node.setAttribute(v_name.attr_id, l_elements[j].id);
+                l_elements[j].node.setAttribute(v_name.attr_window, l_window.id);
+            };
+
+            if (l_options.makeTypeDetect) {
+                f_element_type_detect(l_elements[j], l_options.type);
+            };
+        };
+
+        l_window.element_current = l_window.elements[l_window.element_current_index];
+        l_window.element_pre = l_window.elements[l_window.element_pre_index];
+
+        l_window.is_init = true;
+
+        return that;
+    };
+
+    leafage_object.prototype.open = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.open, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        if (l_window.is_open) {
+            return that.show();
+        };
+
+        if (!l_window.is_init) {
+            that.init();
+        };
+
+        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+            leafage_object.create(v_tail_current).hide();
+        };
+
+        f_window_open(l_window, l_options);
+
+        that.load();
+
+        return that;
+    };
+
+    leafage_object.prototype.close = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.close, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        f_window_close(l_window, l_options);
+
+        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+            leafage_object.create(v_tail_current).show();
+        };
+
+        that.unset();
+
+        return that;
+    };
+
+    leafage_object.prototype.show = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.show, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+            leafage_object.create(v_tail_current).hide();
+        };
+
+        f_window_show(l_window, l_options);
+
+        return that;
+    };
+
+    leafage_object.prototype.hide = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.hide, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        f_window_hide(l_window, l_options);
+
+        return that;
+    };
+
+    leafage_object.prototype.load = function (marker) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.load, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        marker = f_array_get_item(l_window.elements, marker) || l_window.elements[0];
+
+        var l_element = f_element_get(marker);
+
+        if (l_window.is_loading) {
+            that.abort();
+        };
+
+        if (l_window.is_set && !l_element.is_active) {
+            that.unset();
+        };
+
+        l_window.element_pre = marker;
+        l_window.element_pre_index = l_window.elements.indexOf(marker);
+
+        f_addclass(l_window.node_window, v_name.class_load);
+
+        l_window.is_loading = true;
+
+        f_element_load(
+            l_element,
+            l_options,
+            function (result) {
+                if (result !== 'abort') {
+                    f_removeclass(l_window.node_window, v_name.class_load);
+
+                    l_window.is_loading = false;
+
+                    that.set();
+                };
+            }
+        );
+
+        return that;
+    };
+
+    leafage_object.prototype.abort = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.abort, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        var l_element = f_element_get(l_window.element_pre);
+
+        if (!l_element.is_loading) {
+            return that;
+        };
+
+        l_element.source.cancel();
+
+        return that;
+    };
+
+    leafage_object.prototype.prev = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.prev, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        var marker = l_window.element_pre - 1;
+        
+        if (marker < 0) {
+            if (l_options.makeLoop) {
+                marker = l_window.elements_total - 1;
+            } else {
+                marker = 0;
+            };
+        };
+
+        that.load(marker);
+
+        return that;
+    };
+
+    leafage_object.prototype.next = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.next, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        var marker = l_window.element_pre_index + 1;
+
+        if (marker >= l_window.elements_total) {
+            if (l_options.makeLoop) {
+                marker = 0;
+            } else {
+                marker = l_window.elements_total - 1;
+            };
+        };
+
+        that.load(marker);
+
+        return that;
+    };
+
+    leafage_object.prototype.set = function (marker) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.set, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        marker = f_array_get_item(l_window.elements, marker) || l_window.element_pre;
+
+        var l_element = f_element_get(marker);
+
+        if (l_element.is_active) {
+            return that;
+        };
+
+        if (l_window.is_set) {
+            that.unset();
+        };
+
+        f_window_set(l_window, l_element, l_options);
+
+        l_window.element_current = marker;
+        l_window.element_current_index = l_window.elements.indexOf(marker);
+        l_window.is_first = (l_window.element_current_index === 0);
+        l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
+
+        f_window_navigation_update(l_window, l_options);
+
+        return that;
+    };
+
+    leafage_object.prototype.unset = function (marker) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.unset, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        if (!l_window.is_enabled) {
+            return that;
+        };
+
+        marker = f_array_get_item(l_window.elements, marker) || l_window.element_current;
+
+        var l_element = f_element_get(marker);
+
+        if (!l_element.is_active) {
+            return that;
+        };
+
+        f_window_unset(l_window, l_element, l_options);
+
+        return that;
+    };
+
+    leafage_object.prototype.enabled = function (marker) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.enabled, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]);
+
+        l_window.is_enabled = true;
+
+        return that;
+    };
+
+    leafage_object.prototype.disabled = function (marker) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.disabled, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]);
+
+        l_window.is_enabled = false;
+
+        return that;
+    };
+
+    leafage_object.prototype.addElement = function (data, place) {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.addElement, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        data = f_elements_create([data], [], l_options)[0];
+
+        var group = data.group || l_window.group;
+
+        switch (place) {
+            case 'before' :
+                for (var i = data.length - 1, l = 0; i >= l; i--) {
+                    group = data[i].group || l_window.group;
+
+                    if (!l_options.makeGrouping || (l_options.makeGrouping && (group === l_window.group))) {
+                        l_window.elements.unshift(data[i].id);
+
+                        l_window.elements_total++;
+                    };
+                };
+
+                l_window.element_current_index = l_window.elements.indexOf(l_window.element_current);
+                l_window.is_first = (l_window.element_current_index === 0);
+
+                break;
+
+            case 'after' :
+            default :
+                for (var i = 0, l = data.length; i < l; i++) {
+                    group = data[i].group || l_window.group;
+
+                    if (!l_options.makeGrouping || (l_options.makeGrouping && (group === l_window.group))) {
+                        l_window.elements.push(data[i].id);
+
+                        l_window.elements_total++;
+                    };
+                };
+
+                l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
+
+                break;
+        };
+
+        return that;
+    };
+
+    /*\
+     *  @return {String} returns info about plugin
+    \*/
+    leafage_object.info = function () {
+        return v_info.name +' v'+ v_info.version +' by '+ v_info.author;
+    };
+
+    /*\
+     *  @param {String|Array} stack
+     *  @return {leafage_object} returns created leafage_object with set stack
+    \*/
+    leafage_object.create = function (stack) {
+        var result = new leafage_object();
+
+        if (f_isarray(stack) && stack.length) {
+            result.stack = stack;
+        } else if ((typeof stack === 'string') && v_window_stack[stack]) {
+            result.stack = [stack];
+        };
+
+        return result;
+    };
+
+    /*\
+     *  @param {String} name
+     *  @param {Object} data
+     *  @return {Object} returns added mod
+    \*/
+    leafage_object.addMod = function (name, data) {
+        return f_mod_add(name, data);
+    };
+
+    /*\
+     *  @param {String} name
+     *  @return {Object} returns selected mod
+    \*/
+    leafage_object.getMod = function (name) {
+        return f_mod_get(name);
+    };
+
+    /*\
+     *  @return {Array} returns the list of existing mods
+    \*/
+    leafage_object.getModList = function () {
+        return f_mod_get_list();
+    };
+
+    /*\
+     *  @param {String} name
+     *  @param {Object} data
+     *  @return {Object} returns added languages
+    \*/
+    leafage_object.addText = function (name, data) {
+        return f_text_add(name, data);
+    };
+
+    /*\
+     *  @param {String} name
+     *  @return {Object} returns selected languages
+    \*/
+    leafage_object.getText = function (name) {
+        return f_text_get(name);
+    };
+
+    /*\
+     *  @return {Array} returns the list of existing languages
+    \*/
+    leafage_object.getTextList = function () {
+        return f_text_get_list();
+    };
+
+    /*\
+     *  @return {Array} returns the list of opened windows
+    \*/
+    leafage_object.getTail = function () {
+        return leafage_object.create(f_tail_get_list());
+    };
+
+
+    window.Leafage = leafage_object;
+
+})();

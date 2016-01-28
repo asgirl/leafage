@@ -1,0 +1,13 @@
+{
+    "name": "leafage",
+    "varsion": "0.0.0",
+    "description": "Leafage is a JavaScript plugin for overlay a contents on the current page.",
+    "keywords": [
+        "javascript",
+        "lightbox"
+    ],
+    "license": "MIT",
+    "author": "A.S.",
+    "repository": "https://github.com/asgirl/leafage",
+    "main": "../leafage.js"
+}
