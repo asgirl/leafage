@@ -1,8 +1,7 @@
 /*\
  *  Leafage
- *  @version 0.0.0
+ *  @version 0.0.1
  *  @license MIT
- *  @author A.S.
 \*/
 ;(function () {
 
@@ -10,11 +9,10 @@
 
 
     var v_info = {
-        'name' : 'Leafage',
-        'version' : '0.0.0',
-        'description' : 'Leafage is a JavaScript plugin for overlay a contents on the current page.',
-        'license' : 'MIT',
         'author' : 'A.S.',
+        'name' : 'Leafage',
+        'version' : '0.0.1',
+        'license' : 'MIT',
         'repository' : 'https://github.com/asgirl/leafage'
     };
 
@@ -358,7 +356,9 @@
             children = node[i].childNodes;
 
             for (var j = 0, k = children.length; j < k; j++) {
-                node[i].removeChild(children[j]);
+                if (children[j]) {
+                    node[i].removeChild(children[j]);
+                };
             };
         };
     };
@@ -682,6 +682,39 @@
         return request;
     };
 
+    /*\
+     *  @param {Node|Array} node
+     *  @param {String|Array} find
+     *  @param {String|Array} stop
+     *  @param {Function} callback
+    \*/
+    var f_find_in_parents = function (node, find, stop, callback) {
+        if (!node || !find || (find.length === 0)) {
+            return;
+        };
+
+        if (!f_isarray(find)) {
+            find = [find];
+        };
+
+        for (var i = 0; i < 1; i++) {
+            for (var j = 0, k = find.length; j < k; j++) {
+                if (f_hasclass(node, find[j])) {
+                    return callback(true, node, find[j]);
+                };
+            };
+            if (f_hasclass(node, stop)) {
+                return callback(false, node, stop);
+            } else if (node.parentNode) {
+                node = node.parentNode;
+
+                i--;
+            } else {
+                return callback(false, node);
+            };
+        };
+    };
+
 
     var v_name = {
         'prefix' : 'leafage',
@@ -696,6 +729,7 @@
         'sel_wrapper' : 'e-wrapper', // selector for wrapper node
         'sel_title' : 'e-title', // selector for node where place a title
         'sel_content' : 'e-content', // selector for node where place a content
+        'sel_shut' : 'e-shut', // selector for close layer
         'sel_close' : 'e-close', // selector for close buttons
         'sel_prev' : 'e-prev', // selector for prev buttons
         'sel_next' : 'e-next', // selector for next buttons
@@ -715,7 +749,8 @@
         'class_next' : 'f-next', // set when start set next element
         'class_ready' : 'f-ready', // set when start set element in first time
         'class_load' : 'f-loading', // set when start loading
-        'class_error' : 'f-error' // set when loading error
+        'class_error' : 'f-error', // set when loading error
+        'class_type' : 'f-type' // set load type
     };
 
 
@@ -786,7 +821,7 @@
             'makeGrouping' : true, // {Boolean} group elements
             'makeCombine' : true, // {Boolean} combine elements for navigation
             'makeBlockPage' : true, // {Boolean} block body when window open
-            'makeTail' : true, // {Boolean} add open window tot tail
+            'makeTail' : true, // {Boolean} add open window to tail
             'makeLoop' : false, // {Boolean} loop navigation
             'makeCasheReset' : false, // {Boolean} reset request cashe
             'makeEventBind' : false, // {Boolean} bind events
@@ -801,9 +836,14 @@
             'groupAttr' : v_name.attr_group, // {String} default attribute for group name
             'ajaxProperty' : {}, // {Object} options for ajax request
             'timeSave' : 60000, // {Number} keep result
-            'template' : '<div class="leafage e-window"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div></div><div class="leafage-preloader"></div></div>', // {string} template
-            'onAccept' : null, // {Function} calls on an accept button click
-            'onCancel' : null // {Function} calls on a cancel button click
+            'template' : '<div class="leafage e-window e-shut"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div></div><div class="leafage-preloader"></div></div>', // {string} template
+            'onInit' : null, // {Function} calls after window init (leafage_object)
+            'onOpen' : null, // {Function} calls after window opening (leafage_object)
+            'onClose' : null, // {Function} calls before window closing (leafage_object)
+            'onSet' : null, // {Function} calls after element seting to window (leafage_object)
+            'onUnset' : null, // {Function} calls before element unseting from window (leafage_object)
+            'onAccept' : null, // {Function} calls on an accept button click (leafage_object)
+            'onCancel' : null // {Function} calls on a cancel button click (leafage_object)
         }
     };
 
@@ -1235,6 +1275,10 @@
         // set active class
         f_addclass(l_window.node_window, v_name.class_active);
 
+        if (l_options.onOpen) {
+            l_options.onOpen(that);
+        };
+
         l_window.is_active = true;
         l_window.is_open = true;
     };
@@ -1242,6 +1286,10 @@
     var f_window_close = function (l_window, l_options) {
         if (!l_window.is_open) {
             return;
+        };
+
+        if (l_options.onClose) {
+            l_options.onClose(that);
         };
 
         // change tail if need
@@ -1343,17 +1391,34 @@
             // set error classs
             f_addclass(l_window.node_window, v_name.class_error);
         } else {
+            // set type class
+            f_addclass(l_window.node_window, v_name.class_type +'_'+ type);
+
             // add helper node
             if (type === 'find') {
                 f_beforenode(l_element.content, l_element.source);
+            } else if (type === 'image') {
+                if (l_window.node_wrapper) {
+                    l_window.node_wrapper.style.maxWidth = l_element.content.naturalWidth +'px';
+                    l_window.node_wrapper.style.maxHeight = l_element.content.naturalHeight +'px';
+                };
             };
 
-            // add title to window
-            f_addnode(l_window.node_title, l_element.title);
+            if (l_element.title) {
+                // add title to window
+                f_addnode(l_window.node_title, l_element.title);
+            } else {
+                // set disabled class
+                f_addclass(l_window.node_title, v_name.class_disabled);
+            };
         };
 
         // add content to window
         f_addnode(l_window.node_content, l_element.content);
+
+        if (l_options.onSet) {
+            l_options.onSet(that);
+        };
 
         l_element.is_active = true;
         l_window.is_set = true;
@@ -1364,6 +1429,10 @@
             return;
         };
 
+        if (l_options.onUnset) {
+            l_options.onUnset(that);
+        };
+
         var type = l_element.type || l_options.type;
 
         // check error status
@@ -1371,14 +1440,27 @@
             // unset error class
             f_removeclass(l_window.node_window, v_name.class_error);
         } else {
+            // unset type class
+            f_removeclass(l_window.node_window, v_name.class_type +'_'+ type);
+
             // remove helper node
             if (type === 'find') {
                 f_beforenode(l_element.source, l_element.content);
                 f_removenode(l_element.source);
+            } else if (type === 'image') {
+                if (l_window.node_wrapper) {
+                    l_window.node_wrapper.style.maxWidth = '';
+                    l_window.node_wrapper.style.maxHeight = '';
+                };
             };
 
-            // clear title nodes
-            f_empty(l_window.node_title);
+            if (l_element.title) {
+                // clear title node
+                f_empty(l_window.node_title);
+            } else {
+                // unset disabled class
+                f_removeclass(l_window.node_title, v_name.class_disabled);
+            };
         };
 
         // clear content nodes
@@ -1528,21 +1610,49 @@
         l_window.bind_click = function (event) {
             var node = event.target;
 
-            if (f_hasclass(node, v_name.sel_close)) {
+            if (f_hasclass(node, v_name.sel_shut)) {
                 that.close();
-            } else if (f_hasclass(node, v_name.sel_prev)) {
-                that.prev();
-            } else if (f_hasclass(node, v_name.sel_next)) {
-                that.next();
-            } else if (f_hasclass(node, v_name.sel_accept)) {
-                if (l_options.onAccept) {
-                    l_options.onAccept();
-                };
-            } else if (f_hasclass(node, v_name.sel_cancel)) {
-                if (l_options.onCancel) {
-                    l_options.onCancel();
-                };
+
+                return;
             };
+
+            f_find_in_parents(
+                node,
+                [v_name.sel_close, v_name.sel_prev, v_name.sel_next, v_name.sel_accept, v_name.sel_cancel],
+                v_name.sel_window,
+                function (result, target, selector) {
+                    if (!result) {
+                        return;
+                    };
+
+                    switch (selector) {
+                        case v_name.sel_close :
+                            that.close();
+
+                            break;
+                        case v_name.sel_prev :
+                            that.prev();
+
+                            break;
+                        case v_name.sel_next :
+                            that.next();
+
+                            break;
+                        case v_name.sel_accept :
+                            if (l_options.onAccept) {
+                                l_options.onAccept();
+                            };
+
+                            break;
+                        case v_name.sel_cancel :
+                            if (l_options.onCancel) {
+                                l_options.onCancel();
+                            };
+
+                            break;
+                    };
+                }
+            );
         };
 
         f_addevent(l_window.node_window, 'click', l_window.bind_click);
@@ -1562,6 +1672,10 @@
         l_window.element_pre = l_window.elements[l_window.element_pre_index];
 
         l_window.is_init = true;
+
+        if (l_options.onInit) {
+            l_options.onInit(that);
+        };
 
         return that;
     };
@@ -1684,12 +1798,12 @@
 
         var l_element = f_element_get(marker);
 
-        if (l_window.is_loading) {
-            that.abort();
+        if (l_element.is_loading || l_element.is_active) {
+            return that;
         };
 
-        if (l_window.is_set && !l_element.is_active) {
-            that.unset();
+        if (l_window.is_loading) {
+            f_element_get(l_window.element_pre).source.cancel();
         };
 
         l_window.element_pre = marker;
@@ -1751,8 +1865,8 @@
             return that;
         };
 
-        var marker = l_window.element_pre - 1;
-        
+        var marker = l_window.element_pre_index - 1;
+
         if (marker < 0) {
             if (l_options.makeLoop) {
                 marker = l_window.elements_total - 1;
