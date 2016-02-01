@@ -1,6 +1,6 @@
 /*\
  *  Leafage
- *  @version 0.0.1
+ *  @version 0.0.2
  *  @license MIT
 \*/
 ;(function () {
@@ -11,7 +11,7 @@
     var v_info = {
         'author' : 'A.S.',
         'name' : 'Leafage',
-        'version' : '0.0.1',
+        'version' : '0.0.2',
         'license' : 'MIT',
         'repository' : 'https://github.com/asgirl/leafage'
     };
@@ -89,7 +89,7 @@
         if (is_empty) {
             return [];
         } else if (is_one) {
-            return [nodes];
+            return [data];
         };
 
         for (var i = 0, l = data.length; i < l; i++) {
@@ -736,7 +736,10 @@
         'sel_touch' : 'e-touch', // selector for touch layer
         'sel_accept' : 'e-accept', // selector for accept buttons
         'sel_cancel' : 'e-cancel', // selector for cancel buttons
+        'sel_current' : 'e-current', // selector for current element number
+        'sel_total' : 'e-total', // selector for total count of elements
         'class_block' : 'f-pageblock', // set when need to block body
+        'class_alone' : 'f-alone', // set if window have one element
         'class_enabled' : 'f-enabled', // set enabled state
         'class_disabled' : 'f-disabled', // set disabled state
         'class_active' : 'f-active', // set when window not hide
@@ -750,7 +753,8 @@
         'class_ready' : 'f-ready', // set when start set element in first time
         'class_load' : 'f-loading', // set when start loading
         'class_error' : 'f-error', // set when loading error
-        'class_type' : 'f-type' // set load type
+        'class_type' : 'f-type', // set load type
+        'event_click' : 'click' // click event
     };
 
 
@@ -818,32 +822,33 @@
             'bindto' : 'body', // {String|Node} node for place a window
             'makeMultiUrl' : true, // {Boolean} may contain several urls in one string
             'makeTypeDetect' : true, // {Boolean} auto detect load type
-            'makeGrouping' : true, // {Boolean} group elements
+            'makeGrouping' : true, // {Boolean} group elements by attribute
             'makeCombine' : true, // {Boolean} combine elements for navigation
-            'makeBlockPage' : true, // {Boolean} block body when window open
+            'makeBlockPage' : true, // {Boolean} add Block class for body when window open
             'makeTail' : true, // {Boolean} add open window to tail
             'makeLoop' : false, // {Boolean} loop navigation
             'makeCasheReset' : false, // {Boolean} reset request cashe
-            'makeEventBind' : false, // {Boolean} bind events
-            'classBody' : '',
-            'classWindow' : '',
-            'urlAttr' : v_name.attr_url, // {String} default attribute for url
-            'titleAttr' : v_name.attr_title, // {String} default attribute for title
-            'contentAttr' : v_name.attr_content, // {String} default attribute for content
+            'makeEventBind' : true, // {Boolean} bind events
+            'makePrevent' : true, // {Boolean} prevent default event
+            'classBody' : '', // {String} additional class for body
+            'classWindow' : '', // {String} additional class for window
+            'urlAttr' : v_name.attr_url, // {String} attribute for url
+            'titleAttr' : v_name.attr_title, // {String} attribute for title
+            'contentAttr' : v_name.attr_content, // {String} attribute for content
             'type' : 'ajax', // {String} default load type 'ajax|find|iframe|image|html'
-            'typeAttr' : v_name.attr_type, // {String} default attribute for load type
+            'typeAttr' : v_name.attr_type, // {String} attribute for load type
             'group' : 'g', // {String} default group name
-            'groupAttr' : v_name.attr_group, // {String} default attribute for group name
+            'groupAttr' : v_name.attr_group, // {String} attribute for group name
             'ajaxProperty' : {}, // {Object} options for ajax request
             'timeSave' : 60000, // {Number} keep result
-            'template' : '<div class="leafage e-window e-shut"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div></div><div class="leafage-preloader"></div></div>', // {string} template
-            'onInit' : null, // {Function} calls after window init (leafage_object)
-            'onOpen' : null, // {Function} calls after window opening (leafage_object)
-            'onClose' : null, // {Function} calls before window closing (leafage_object)
-            'onSet' : null, // {Function} calls after element seting to window (leafage_object)
-            'onUnset' : null, // {Function} calls before element unseting from window (leafage_object)
-            'onAccept' : null, // {Function} calls on an accept button click (leafage_object)
-            'onCancel' : null // {Function} calls on a cancel button click (leafage_object)
+            'template' : '<div class="leafage e-window e-shut"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div><div class="leafage-count"><span class="e-current"></span>/<span class="e-total"></span></div></div><div class="leafage-preloader"></div></div>', // {string} template
+            'onInit' : null, // {Function} called after window init (leafage_object)
+            'onOpen' : null, // {Function} called after window opening (leafage_object)
+            'onClose' : null, // {Function} called before window closing (leafage_object)
+            'onSet' : null, // {Function} called after element seting to window (leafage_object)
+            'onUnset' : null, // {Function} called before element unseting from window (leafage_object)
+            'onAccept' : null, // {Function} called on an accept button click (leafage_object)
+            'onCancel' : null // {Function} called on a cancel button click (leafage_object)
         }
     };
 
@@ -944,6 +949,18 @@
         v_element_stack[data.id] = f_extend(v_element, data);
 
         return v_element_stack[data.id];
+    };
+
+    var f_element_remove = function (id) {
+        var result = [];
+
+        if (f_isarray(id)) {
+            for (var i = 0, l = id.length; i < l; i++) {
+                v_element_stack[id[i]] = null;
+            };
+        } else {
+            v_element_stack[id] = null;
+        };
     };
 
     var f_element_get = function (id) {
@@ -1167,6 +1184,7 @@
         'id' : '',
         'is_enabled' : true,
         'is_init' : false,
+        'is_bind' : false,
         'is_open' : false,
         'is_ready' : false,
         'is_active' : false,
@@ -1197,6 +1215,10 @@
         return v_window_stack[data.id];
     };
 
+    var f_window_remove = function (id) {
+        v_window_stack[id] = null;
+    };
+
     var f_window_get = function (id) {
         return v_window_stack[id];
     };
@@ -1220,6 +1242,8 @@
         l_window.node_content = f_findnode(template, '.'+ v_name.sel_content);
         l_window.node_prev = f_findnodes(template, '.'+ v_name.sel_prev);
         l_window.node_next = f_findnodes(template, '.'+ v_name.sel_next);
+        l_window.node_current = f_findnodes(template, '.'+ v_name.sel_current);
+        l_window.node_total = f_findnodes(template, '.'+ v_name.sel_total);
 
         l_window.node_place = f_getnode(l_options.bindto);
 
@@ -1232,6 +1256,9 @@
                 f_removenode(l_window.node_next);
             };
         };
+
+        // set class
+        f_addclass(l_window.node_window, l_options.classWindow);
     };
 
     var f_window_navigation_update = function (l_window, l_options) {
@@ -1275,6 +1302,9 @@
         // set active class
         f_addclass(l_window.node_window, v_name.class_active);
 
+        // set class
+        f_addclass(v_html, l_options.classBody);
+
         if (l_options.onOpen) {
             l_options.onOpen(that);
         };
@@ -1311,6 +1341,9 @@
 
         // unset active class
         f_removeclass(l_window.node_window, v_name.class_active);
+
+        // unset class
+        f_removeclass(v_html, l_options.classBody);
 
         l_window.is_active = false;
         l_window.is_open = false;
@@ -1386,10 +1419,12 @@
 
         var type = l_element.type || l_options.type;
 
-        // check error status
         if (l_element.is_error) {
             // set error classs
             f_addclass(l_window.node_window, v_name.class_error);
+
+            // set disabled class
+            f_addclass(l_window.node_title, v_name.class_disabled);
         } else {
             // set type class
             f_addclass(l_window.node_window, v_name.class_type +'_'+ type);
@@ -1416,6 +1451,15 @@
         // add content to window
         f_addnode(l_window.node_content, l_element.content);
 
+        // add count to window
+        f_addnode(l_window.node_current, (l_window.element_current_index + 1).toString());
+        f_addnode(l_window.node_total, l_window.elements_total.toString());
+
+        if (l_window.elements_total === 1) {
+            // set alone class
+            f_addclass(l_window.node_window, v_name.class_alone);
+        };
+
         if (l_options.onSet) {
             l_options.onSet(that);
         };
@@ -1439,6 +1483,9 @@
         if (l_element.is_error) {
             // unset error class
             f_removeclass(l_window.node_window, v_name.class_error);
+
+            // unset disabled class
+            f_removeclass(l_window.node_title, v_name.class_disabled);
         } else {
             // unset type class
             f_removeclass(l_window.node_window, v_name.class_type +'_'+ type);
@@ -1465,6 +1512,15 @@
 
         // clear content nodes
         f_empty(l_window.node_content);
+
+        // remove count to window
+        f_empty(l_window.node_current);
+        f_empty(l_window.node_total);
+
+        if (l_window.elements_total === 1) {
+            // unset alone class
+            f_removeclass(l_window.node_window, v_name.class_alone);
+        };
 
         l_element.is_active = false;
         l_window.is_set = false;
@@ -1557,6 +1613,10 @@
 
         that.init();
 
+        if (l_options.makeEventBind) {
+            that.bind();
+        };
+
         return that;
     };
 
@@ -1607,56 +1667,6 @@
 
         f_window_template_create(l_window, l_options);
 
-        l_window.bind_click = function (event) {
-            var node = event.target;
-
-            if (f_hasclass(node, v_name.sel_shut)) {
-                that.close();
-
-                return;
-            };
-
-            f_find_in_parents(
-                node,
-                [v_name.sel_close, v_name.sel_prev, v_name.sel_next, v_name.sel_accept, v_name.sel_cancel],
-                v_name.sel_window,
-                function (result, target, selector) {
-                    if (!result) {
-                        return;
-                    };
-
-                    switch (selector) {
-                        case v_name.sel_close :
-                            that.close();
-
-                            break;
-                        case v_name.sel_prev :
-                            that.prev();
-
-                            break;
-                        case v_name.sel_next :
-                            that.next();
-
-                            break;
-                        case v_name.sel_accept :
-                            if (l_options.onAccept) {
-                                l_options.onAccept();
-                            };
-
-                            break;
-                        case v_name.sel_cancel :
-                            if (l_options.onCancel) {
-                                l_options.onCancel();
-                            };
-
-                            break;
-                    };
-                }
-            );
-        };
-
-        f_addevent(l_window.node_window, 'click', l_window.bind_click);
-
         for (var j = 0, k = l_window.elements_total; j < k; j++) {
             if (l_elements[j].node) {
                 l_elements[j].node.setAttribute(v_name.attr_id, l_elements[j].id);
@@ -1676,6 +1686,126 @@
         if (l_options.onInit) {
             l_options.onInit(that);
         };
+
+        return that;
+    };
+
+    leafage_object.prototype.bind = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.bind, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options,
+            l_elements = f_element_get(l_window.elements);
+
+        if (!l_window.is_bind) {
+            l_window.bind_click = function (event) {
+                if (l_options.makePrevent) {
+                    event.preventDefault();
+                };
+
+                var node = event.target;
+
+                if (f_hasclass(node, v_name.sel_shut)) {
+                    that.close();
+
+                    return;
+                };
+
+                f_find_in_parents(
+                    node,
+                    [v_name.sel_close, v_name.sel_prev, v_name.sel_next, v_name.sel_accept, v_name.sel_cancel],
+                    v_name.sel_window,
+                    function (result, target, selector) {
+                        if (!result) {
+                            return;
+                        };
+
+                        switch (selector) {
+                            case v_name.sel_close :
+                                that.close();
+
+                                break;
+                            case v_name.sel_prev :
+                                that.prev();
+
+                                break;
+                            case v_name.sel_next :
+                                that.next();
+
+                                break;
+                            case v_name.sel_accept :
+                                if (l_options.onAccept) {
+                                    l_options.onAccept();
+                                };
+
+                                break;
+                            case v_name.sel_cancel :
+                                if (l_options.onCancel) {
+                                    l_options.onCancel();
+                                };
+
+                                break;
+                        };
+                    }
+                );
+            };
+
+            l_window.bind_open = function (event) {
+                if (l_options.makePrevent) {
+                    event.preventDefault();
+                };
+
+                var marker = this.getAttribute(v_name.attr_id);
+
+                that.open().load(marker);
+            };
+
+            f_addevent(l_window.node_window, v_name.event_click, l_window.bind_click);
+        };
+
+        for (var j = 0, k = l_window.elements_total; j < k; j++) {
+            if (!l_elements[j].is_bind && l_elements[j].node) {
+                f_addevent(l_elements[j].node, v_name.event_click, l_window.bind_open);
+
+                l_elements[j].is_bind = true;
+            };
+        };
+
+        l_window.is_bind = true;
+
+        return that;
+    };
+
+    leafage_object.prototype.unbind = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.unbind, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options,
+            l_elements = f_element_get(l_window.elements);
+
+        if (!l_window.is_bind) {
+            return that;
+        };
+
+        f_removeevent(l_window.node_window, v_name.event_click, l_window.bind_click);
+
+        for (var j = 0, k = l_window.elements_total; j < k; j++) {
+            if (l_elements[j].is_bind && l_elements[j].node) {
+                f_removeevent(l_elements[j].node, v_name.event_click, l_window.bind_open);
+
+                l_elements[j].is_bind = false;
+            };
+        };
+
+        l_window.is_bind = false;
 
         return that;
     };
@@ -1798,7 +1928,7 @@
 
         var l_element = f_element_get(marker);
 
-        if (l_element.is_loading || l_element.is_active) {
+        if (!marker || l_element.is_loading || l_element.is_active) {
             return that;
         };
 
@@ -1842,7 +1972,7 @@
 
         var l_element = f_element_get(l_window.element_pre);
 
-        if (!l_element.is_loading) {
+        if (!l_element || !l_element.is_loading) {
             return that;
         };
 
@@ -1927,7 +2057,7 @@
 
         var l_element = f_element_get(marker);
 
-        if (l_element.is_active) {
+        if (!marker || l_element.is_active) {
             return that;
         };
 
@@ -1935,12 +2065,12 @@
             that.unset();
         };
 
-        f_window_set(l_window, l_element, l_options);
-
         l_window.element_current = marker;
         l_window.element_current_index = l_window.elements.indexOf(marker);
         l_window.is_first = (l_window.element_current_index === 0);
         l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
+
+        f_window_set(l_window, l_element, l_options);
 
         f_window_navigation_update(l_window, l_options);
 
@@ -1965,7 +2095,7 @@
 
         var l_element = f_element_get(marker);
 
-        if (!l_element.is_active) {
+        if (!marker || !l_element.is_active) {
             return that;
         };
 
@@ -1974,7 +2104,7 @@
         return that;
     };
 
-    leafage_object.prototype.enabled = function (marker) {
+    leafage_object.prototype.enabled = function () {
         var that = this;
 
         if (that.stack.length !== 1) {
@@ -1988,7 +2118,7 @@
         return that;
     };
 
-    leafage_object.prototype.disabled = function (marker) {
+    leafage_object.prototype.disabled = function () {
         var that = this;
 
         if (that.stack.length !== 1) {
@@ -2002,7 +2132,71 @@
         return that;
     };
 
-    leafage_object.prototype.addElement = function (data, place) {
+    leafage_object.prototype.update = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.update, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options;
+
+        l_window.elements_total = l_window.elements.length;
+        l_window.element_current_index = l_window.elements.indexOf(l_window.element_current);
+        l_window.element_pre_index = l_window.elements.indexOf(l_window.element_pre);
+
+        if (l_window.element_current_index === -1) {
+            l_window.element_current =  '';
+            l_window.element_current_index =  0;
+        };
+        if (l_window.element_pre_index === -1) {
+            l_window.element_pre =  '';
+            l_window.element_pre_index =  0;
+        };
+
+        l_window.is_first = (l_window.element_current_index === 0);
+        l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
+
+        if (l_window.is_active) {
+            that.load();
+        };
+
+        return that;
+    };
+
+    leafage_object.prototype.destory = function () {
+        var that = this;
+
+        if (that.stack.length !== 1) {
+            return that.each(that.destory, arguments);
+        };
+
+        var l_window = f_window_get(that.stack[0]),
+            l_options = l_window.options,
+            l_elements = f_element_get(l_window.elements);
+
+        for (var j = 0, k = l_window.elements_total; j < k; j++) {
+            if (l_elements[j].node) {
+                l_elements[j].node.removeAttribute(v_name.attr_id);
+                l_elements[j].node.removeAttribute(v_name.attr_window);
+            };
+        };
+
+        if (l_options.makeEventBind) {
+            that.unbind();
+        };
+
+        f_element_remove(l_window.elements);
+
+        l_window.elements = [];
+        
+        that.update();
+
+        return that;
+    };
+
+    leafage_object.prototype.addElements = function (node, data, place) {
         var that = this;
 
         if (that.stack.length !== 1) {
@@ -2012,42 +2206,50 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        data = f_elements_create([data], [], l_options)[0];
+        var l_elements = f_elements_create(f_toarray(data), f_toarray(node), l_options);
 
-        var group = data.group || l_window.group;
+        for (var i = 0, l = l_elements.length; i < l; i++) {
+            if (l_elements[i].node) {
+                l_elements[i].node.setAttribute(v_name.attr_id, l_elements[i].id);
+                l_elements[i].node.setAttribute(v_name.attr_window, l_window.id);
+            };
+
+            if (l_options.makeTypeDetect) {
+                f_element_type_detect(l_elements[i], l_options.type);
+            };
+        };
+
+        var group = '';
 
         switch (place) {
             case 'before' :
-                for (var i = data.length - 1, l = 0; i >= l; i--) {
-                    group = data[i].group || l_window.group;
+                for (var j = l_elements.length - 1, k = 0; j >= k; j--) {
+                    group = l_elements[j].group || l_window.group;
 
                     if (!l_options.makeGrouping || (l_options.makeGrouping && (group === l_window.group))) {
-                        l_window.elements.unshift(data[i].id);
-
-                        l_window.elements_total++;
+                        l_window.elements.unshift(l_elements[j].id);
                     };
                 };
-
-                l_window.element_current_index = l_window.elements.indexOf(l_window.element_current);
-                l_window.is_first = (l_window.element_current_index === 0);
 
                 break;
 
             case 'after' :
             default :
-                for (var i = 0, l = data.length; i < l; i++) {
-                    group = data[i].group || l_window.group;
+                for (var j = 0, k = l_elements.length; j < k; j++) {
+                    group = l_elements[j].group || l_window.group;
 
                     if (!l_options.makeGrouping || (l_options.makeGrouping && (group === l_window.group))) {
-                        l_window.elements.push(data[i].id);
-
-                        l_window.elements_total++;
+                        l_window.elements.push(l_elements[j].id);
                     };
                 };
 
-                l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
-
                 break;
+        };
+
+        that.update();
+
+        if (l_options.makeEventBind) {
+            that.bind();
         };
 
         return that;

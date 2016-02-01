@@ -1,7 +1,7 @@
 {
   "author": "A.S.",
   "name": "leafage",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Leafage is a JavaScript plugin for overlay a contents on the current page.",
   "keywords": [
     "javascript",
