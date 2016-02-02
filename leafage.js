@@ -1,6 +1,6 @@
 /*\
  *  Leafage
- *  @version 0.0.2
+ *  @version 0.0.3
  *  @license MIT
 \*/
 ;(function () {
@@ -11,7 +11,7 @@
     var v_info = {
         'author' : 'A.S.',
         'name' : 'Leafage',
-        'version' : '0.0.2',
+        'version' : '0.0.3',
         'license' : 'MIT',
         'repository' : 'https://github.com/asgirl/leafage'
     };
@@ -819,7 +819,7 @@
         'general' : {
             'mod' : 'general', // {String} mod name
             'lang' : 'general', // {String} text lang
-            'bindto' : 'body', // {String|Node} node for place a window
+            'bindto' : 'body', // {String|Node} selector or node for place a window
             'makeMultiUrl' : true, // {Boolean} may contain several urls in one string
             'makeTypeDetect' : true, // {Boolean} auto detect load type
             'makeGrouping' : true, // {Boolean} group elements by attribute
