@@ -15,7 +15,12 @@ module.exports = function (grunt) {
       options: {
         banner: '/*\\\n *  <%= pkg.name %> v<%= pkg.version %> by <%= pkg.author %> <%= pkg.repository %>\n\\*/\n'
       },
-      target: {
+      min: {
+        options: {
+          report: 'min',
+          sourceMap: true,
+          sourceMapName: '../leafage.map'
+        },
         files: {
           '../leafage.min.js': ['../leafage.js']
         }
@@ -27,5 +32,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.registerTask('default', ['connect']);
-  grunt.registerTask('min', ['uglify']);
+  grunt.registerTask('min', ['uglify:min']);
 };

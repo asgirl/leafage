@@ -1245,7 +1245,11 @@
         l_window.node_current = f_findnodes(template, '.'+ v_name.sel_current);
         l_window.node_total = f_findnodes(template, '.'+ v_name.sel_total);
 
-        l_window.node_place = f_getnode(l_options.bindto);
+        if (l_options.bindto instanceof Node) {
+            l_window.node_place = l_options.bindto;
+        } else {
+            l_window.node_place = f_getnode(l_options.bindto);
+        };
 
         // delete nav buttons if navigation not need
         if (!l_options.makeCombine) {
@@ -1791,21 +1795,19 @@
             l_options = l_window.options,
             l_elements = f_element_get(l_window.elements);
 
-        if (!l_window.is_bind) {
-            return that;
-        };
+        if (l_window.is_bind) {
+            f_removeevent(l_window.node_window, v_name.event_click, l_window.bind_click);
 
-        f_removeevent(l_window.node_window, v_name.event_click, l_window.bind_click);
+            for (var j = 0, k = l_window.elements_total; j < k; j++) {
+                if (l_elements[j].is_bind && l_elements[j].node) {
+                    f_removeevent(l_elements[j].node, v_name.event_click, l_window.bind_open);
 
-        for (var j = 0, k = l_window.elements_total; j < k; j++) {
-            if (l_elements[j].is_bind && l_elements[j].node) {
-                f_removeevent(l_elements[j].node, v_name.event_click, l_window.bind_open);
-
-                l_elements[j].is_bind = false;
+                    l_elements[j].is_bind = false;
+                };
             };
-        };
 
-        l_window.is_bind = false;
+            l_window.is_bind = false;
+        };
 
         return that;
     };
@@ -1820,25 +1822,23 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         if (l_window.is_open) {
             return that.show();
         };
 
-        if (!l_window.is_init) {
-            that.init();
+        if (l_window.is_enabled) {
+            if (!l_window.is_init) {
+                that.init();
+            };
+
+            if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+                leafage_object.create(v_tail_current).hide();
+            };
+
+            f_window_open(l_window, l_options);
+
+            that.load();
         };
-
-        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
-            leafage_object.create(v_tail_current).hide();
-        };
-
-        f_window_open(l_window, l_options);
-
-        that.load();
 
         return that;
     };
@@ -1853,17 +1853,15 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
+        if (l_window.is_enabled) {
+            f_window_close(l_window, l_options);
+
+            if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+                leafage_object.create(v_tail_current).show();
+            };
+
+            that.unset();
         };
-
-        f_window_close(l_window, l_options);
-
-        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
-            leafage_object.create(v_tail_current).show();
-        };
-
-        that.unset();
 
         return that;
     };
@@ -1878,15 +1876,13 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
+        if (l_window.is_enabled) {
+            if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
+                leafage_object.create(v_tail_current).hide();
+            };
 
-        if (l_options.makeTail && v_tail_current && (v_tail_current !== l_window.id)) {
-            leafage_object.create(v_tail_current).hide();
+            f_window_show(l_window, l_options);
         };
-
-        f_window_show(l_window, l_options);
 
         return that;
     };
@@ -1901,11 +1897,9 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
+        if (l_window.is_enabled) {
+            f_window_hide(l_window, l_options);
         };
-
-        f_window_hide(l_window, l_options);
 
         return that;
     };
@@ -1920,42 +1914,36 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         marker = f_array_get_item(l_window.elements, marker) || l_window.elements[0];
 
         var l_element = f_element_get(marker);
 
-        if (!marker || l_element.is_loading || l_element.is_active) {
-            return that;
+        if (l_window.is_enabled && !l_element.is_loading && !l_element.is_active && marker) {
+            if (l_window.is_loading) {
+                f_element_get(l_window.element_pre).source.cancel();
+            };
+
+            l_window.element_pre = marker;
+            l_window.element_pre_index = l_window.elements.indexOf(marker);
+
+            f_addclass(l_window.node_window, v_name.class_load);
+
+            l_window.is_loading = true;
+
+            f_element_load(
+                l_element,
+                l_options,
+                function (result) {
+                    if (result !== 'abort') {
+                        f_removeclass(l_window.node_window, v_name.class_load);
+
+                        l_window.is_loading = false;
+
+                        that.set();
+                    };
+                }
+            );
         };
-
-        if (l_window.is_loading) {
-            f_element_get(l_window.element_pre).source.cancel();
-        };
-
-        l_window.element_pre = marker;
-        l_window.element_pre_index = l_window.elements.indexOf(marker);
-
-        f_addclass(l_window.node_window, v_name.class_load);
-
-        l_window.is_loading = true;
-
-        f_element_load(
-            l_element,
-            l_options,
-            function (result) {
-                if (result !== 'abort') {
-                    f_removeclass(l_window.node_window, v_name.class_load);
-
-                    l_window.is_loading = false;
-
-                    that.set();
-                };
-            }
-        );
 
         return that;
     };
@@ -1972,11 +1960,9 @@
 
         var l_element = f_element_get(l_window.element_pre);
 
-        if (!l_element || !l_element.is_loading) {
-            return that;
+        if (l_element.is_loading) {
+            l_element.source.cancel();
         };
-
-        l_element.source.cancel();
 
         return that;
     };
@@ -1991,21 +1977,19 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         var marker = l_window.element_pre_index - 1;
 
-        if (marker < 0) {
-            if (l_options.makeLoop) {
-                marker = l_window.elements_total - 1;
-            } else {
-                marker = 0;
+        if (l_window.is_enabled) {
+            if (marker < 0) {
+                if (l_options.makeLoop) {
+                    marker = l_window.elements_total - 1;
+                } else {
+                    marker = 0;
+                };
             };
-        };
 
-        that.load(marker);
+            that.load(marker);
+        };
 
         return that;
     };
@@ -2020,21 +2004,19 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         var marker = l_window.element_pre_index + 1;
 
-        if (marker >= l_window.elements_total) {
-            if (l_options.makeLoop) {
-                marker = 0;
-            } else {
-                marker = l_window.elements_total - 1;
+        if (l_window.is_enabled) {
+            if (marker >= l_window.elements_total) {
+                if (l_options.makeLoop) {
+                    marker = 0;
+                } else {
+                    marker = l_window.elements_total - 1;
+                };
             };
-        };
 
-        that.load(marker);
+            that.load(marker);
+        };
 
         return that;
     };
@@ -2049,30 +2031,24 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         marker = f_array_get_item(l_window.elements, marker) || l_window.element_pre;
 
         var l_element = f_element_get(marker);
 
-        if (!marker || l_element.is_active) {
-            return that;
+        if (l_window.is_enabled && l_element.is_active) {
+            if (l_window.is_set) {
+                that.unset();
+            };
+
+            l_window.element_current = marker;
+            l_window.element_current_index = l_window.elements.indexOf(marker);
+            l_window.is_first = (l_window.element_current_index === 0);
+            l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
+
+            f_window_set(l_window, l_element, l_options);
+
+            f_window_navigation_update(l_window, l_options);
         };
-
-        if (l_window.is_set) {
-            that.unset();
-        };
-
-        l_window.element_current = marker;
-        l_window.element_current_index = l_window.elements.indexOf(marker);
-        l_window.is_first = (l_window.element_current_index === 0);
-        l_window.is_last = (l_window.element_current_index === l_window.elements_total - 1);
-
-        f_window_set(l_window, l_element, l_options);
-
-        f_window_navigation_update(l_window, l_options);
 
         return that;
     };
@@ -2087,19 +2063,13 @@
         var l_window = f_window_get(that.stack[0]),
             l_options = l_window.options;
 
-        if (!l_window.is_enabled) {
-            return that;
-        };
-
         marker = f_array_get_item(l_window.elements, marker) || l_window.element_current;
 
         var l_element = f_element_get(marker);
 
-        if (!marker || !l_element.is_active) {
-            return that;
+        if (l_window.is_enabled && l_element.is_active) {
+            f_window_unset(l_window, l_element, l_options);
         };
-
-        f_window_unset(l_window, l_element, l_options);
 
         return that;
     };
@@ -2327,7 +2297,7 @@
     };
 
     /*\
-     *  @return {Array} returns the list of opened windows
+     *  @return {Array} returns new object with list of opened windows in stack
     \*/
     leafage_object.getTail = function () {
         return leafage_object.create(f_tail_get_list());
