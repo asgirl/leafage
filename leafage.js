@@ -841,7 +841,7 @@
             'groupAttr' : v_name.attr_group, // {String} attribute for group name
             'ajaxProperty' : {}, // {Object} options for ajax request
             'timeSave' : 60000, // {Number} keep result
-            'template' : '<div class="leafage e-window e-shut"><button class="leafage-close e-close">{{txt_close}}</button><button class="leafage-prev e-prev">{{txt_prev}}</button><button class="leafage-next e-next">{{txt_next}}</button><div class="leafage-wrapper e-wrapper"><div class="leafage-title e-title"></div><div class="leafage-content e-content"></div><div class="leafage-count"><span class="e-current"></span>/<span class="e-total"></span></div></div><div class="leafage-preloader"></div></div>', // {string} template
+            'template' : '<div class="leafage e-window e-shut"><button class="leafage-prev e-prev" title="{{txt_prev}}"></button><button class="leafage-next e-next" title="{{txt_next}}"></button><div class="leafage-wrapper e-wrapper"><div class="leafage-content e-content"></div></div><div class="leafage-info"><button class="leafage-close e-close" title="{{txt_close}}"></button><div class="leafage-count"><span class="e-current"></span> / <span class="e-total"></span></div><div class="leafage-title e-title"></div></div><div class="leafage-preloader"></div></div>', // {string} template
             'onInit' : null, // {Function} called after window init (leafage_object)
             'onOpen' : null, // {Function} called after window opening (leafage_object)
             'onClose' : null, // {Function} called before window closing (leafage_object)
@@ -928,6 +928,7 @@
         'id' : '',
         'is_get' : false,
         'is_error' : false,
+        'is_set' : false,
         'is_active' : false,
         'is_loading' : false,
         'is_bind' : false,
@@ -1421,39 +1422,13 @@
             return;
         };
 
-        var type = l_element.type || l_options.type;
-
-        if (l_element.is_error) {
-            // set error classs
-            f_addclass(l_window.node_window, v_name.class_error);
-
+        if (l_element.title) {
+            // add title to window
+            f_addnode(l_window.node_title, l_element.title);
+        } else {
             // set disabled class
             f_addclass(l_window.node_title, v_name.class_disabled);
-        } else {
-            // set type class
-            f_addclass(l_window.node_window, v_name.class_type +'_'+ type);
-
-            // add helper node
-            if (type === 'find') {
-                f_beforenode(l_element.content, l_element.source);
-            } else if (type === 'image') {
-                if (l_window.node_wrapper) {
-                    l_window.node_wrapper.style.maxWidth = l_element.content.naturalWidth +'px';
-                    l_window.node_wrapper.style.maxHeight = l_element.content.naturalHeight +'px';
-                };
-            };
-
-            if (l_element.title) {
-                // add title to window
-                f_addnode(l_window.node_title, l_element.title);
-            } else {
-                // set disabled class
-                f_addclass(l_window.node_title, v_name.class_disabled);
-            };
         };
-
-        // add content to window
-        f_addnode(l_window.node_content, l_element.content);
 
         // add count to window
         f_addnode(l_window.node_current, (l_window.element_current_index + 1).toString());
@@ -1483,35 +1458,34 @@
 
         var type = l_element.type || l_options.type;
 
-        // check error status
-        if (l_element.is_error) {
-            // unset error class
-            f_removeclass(l_window.node_window, v_name.class_error);
+        if (l_element.is_set) {
+            // check error status
+            if (l_element.is_error) {
+                // unset error class
+                f_removeclass(l_window.node_window, v_name.class_error);
+            } else {
+                // unset type class
+                f_removeclass(l_window.node_window, v_name.class_type +'_'+ type);
 
-            // unset disabled class
-            f_removeclass(l_window.node_title, v_name.class_disabled);
-        } else {
-            // unset type class
-            f_removeclass(l_window.node_window, v_name.class_type +'_'+ type);
-
-            // remove helper node
-            if (type === 'find') {
-                f_beforenode(l_element.source, l_element.content);
-                f_removenode(l_element.source);
-            } else if (type === 'image') {
-                if (l_window.node_wrapper) {
-                    l_window.node_wrapper.style.maxWidth = '';
-                    l_window.node_wrapper.style.maxHeight = '';
+                // remove helper node
+                if (type === 'find') {
+                    f_beforenode(l_element.source, l_element.content);
+                    f_removenode(l_element.source);
+                } else if (type === 'image') {
+                    if (l_window.node_wrapper) {
+                        l_window.node_wrapper.style.maxWidth = '';
+                        l_window.node_wrapper.style.maxHeight = '';
+                    };
                 };
             };
+        };
 
-            if (l_element.title) {
-                // clear title node
-                f_empty(l_window.node_title);
-            } else {
-                // unset disabled class
-                f_removeclass(l_window.node_title, v_name.class_disabled);
-            };
+        if (l_element.title) {
+            // clear title node
+            f_empty(l_window.node_title);
+        } else {
+            // unset disabled class
+            f_removeclass(l_window.node_title, v_name.class_disabled);
         };
 
         // clear content nodes
@@ -1526,8 +1500,40 @@
             f_removeclass(l_window.node_window, v_name.class_alone);
         };
 
+        l_element.is_set = false;
         l_element.is_active = false;
         l_window.is_set = false;
+    };
+
+    var f_window_content_set = function (l_window, l_element, l_options) {
+        if (l_element.is_set) {
+            return;
+        };
+
+        var type = l_element.type || l_options.type;
+
+        if (l_element.is_error) {
+            // set error classs
+            f_addclass(l_window.node_window, v_name.class_error);
+        } else {
+            // set type class
+            f_addclass(l_window.node_window, v_name.class_type +'_'+ type);
+
+            // add helper node
+            if (type === 'find') {
+                f_beforenode(l_element.content, l_element.source);
+            } else if (type === 'image') {
+                if (l_window.node_wrapper) {
+                    l_window.node_wrapper.style.maxWidth = l_element.content.naturalWidth +'px';
+                    //l_window.node_wrapper.style.maxHeight = l_element.content.naturalHeight +'px';
+                };
+            };
+        };
+
+        // add content to window
+        f_addnode(l_window.node_content, l_element.content);
+
+        l_element.is_set = true;
     };
 
 
@@ -1926,6 +1932,8 @@
             l_window.element_pre = marker;
             l_window.element_pre_index = l_window.elements.indexOf(marker);
 
+            that.set();
+
             f_addclass(l_window.node_window, v_name.class_load);
 
             l_window.is_loading = true;
@@ -1939,7 +1947,7 @@
 
                         l_window.is_loading = false;
 
-                        that.set();
+                        f_window_content_set(l_window, l_element, l_options);
                     };
                 }
             );
@@ -2035,7 +2043,7 @@
 
         var l_element = f_element_get(marker);
 
-        if (l_window.is_enabled && l_element.is_active) {
+        if (l_window.is_enabled && !l_element.is_active && marker) {
             if (l_window.is_set) {
                 that.unset();
             };

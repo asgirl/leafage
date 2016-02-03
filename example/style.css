@@ -135,6 +135,9 @@ body, html {
 .holder {
 	text-align: center;
 }
+.f-pageblock .holder {
+	overflow-y: scroll;
+}
 .button {
 	margin: 50px 10px;
 	padding: 10px 30px;
@@ -149,3 +152,8 @@ body, html {
 	cursor: pointer;
 	letter-spacing: normal;
 }
+
+.leafage {
+    overflow-y: scroll !important;
+}
+
