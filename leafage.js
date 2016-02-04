@@ -19,14 +19,15 @@
 
     var v_window = window,
         v_document = document,
-        v_html = document.documentElement;
+        v_html = document.documentElement,
+        v_body = document.body;
 
 
     /*\
      *  @param {*} data
      *  @returns {Boolean} returns true if data is a object else return false
     \*/
-    var f_isobject = function (data) {
+    function f_isobject (data) {
         return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call({})));
     };
 
@@ -34,7 +35,7 @@
      *  @param {*} data
      *  @returns {Boolean} returns true if data is a array else return false
     \*/
-    var f_isarray = function (data) {
+    function f_isarray (data) {
         return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call([])));
     };
 
@@ -42,7 +43,7 @@
      *  @param {*} data
      *  @returns {Boolean} returns true if data is a function else return false
     \*/
-    var f_isfunction = function (data) {
+    function f_isfunction (data) {
         return (data && (Object.prototype.toString.call(data) === Object.prototype.toString.call(function () {})));
     };
 
@@ -50,7 +51,7 @@
      *  @param {Object}
      *  @returns {Object} returns new object, if no arguments return empty object
     \*/
-    var f_extend = function () {
+    function f_extend () {
         var arg = arguments,
             result = {};
 
@@ -81,7 +82,7 @@
      *  @param {*} data
      *  @returns {Array} returns new array
     \*/
-    var f_toarray = function (data) {
+    function f_toarray (data) {
         var is_empty = (!data || (data.length === 0)),
             is_one = (!is_empty && !data.length),
             result = [];
@@ -103,7 +104,7 @@
      *  @param {Node|Array} node
      *  @param {String|Array} add
     \*/
-    var f_addclass = function (node, add) {
+    function f_addclass (node, add) {
         if (!node || (node.length === 0) || !add || (add.length === 0)) {
             return;
         };
@@ -135,7 +136,7 @@
      *  @param {Node|Array} node
      *  @param {String|Array} remove
     \*/
-    var f_removeclass = function (node, remove) {
+    function f_removeclass (node, remove) {
         if (!node || (node.length === 0) || !remove || (remove.length === 0)) {
             return;
         };
@@ -169,7 +170,7 @@
      *  @param {String|Array} find
      *  @returns {Boolean} returns true if node has class and false if has not
     \*/
-    var f_hasclass = function (node, find) {
+    function f_hasclass (node, find) {
         if (!node || node.length || !find || (find.length === 0)) {
             return false;
         };
@@ -194,7 +195,7 @@
      *  @param {String|Array} type
      *  @param {Function} handler
     \*/
-    var f_addevent = function (node, type, handler) {
+    function f_addevent (node, type, handler) {
         if (!node || (node.length === 0) || !type || (type.length === 0) || !handler) {
             return;
         };
@@ -225,7 +226,7 @@
      *  @param {String|Array} type
      *  @param {Function} handler
     \*/
-    var f_removeevent = function (node, type, handler) {
+    function f_removeevent (node, type, handler) {
         if (!node || (node.length === 0) || !type || (type.length === 0) || !handler) {
             return;
         };
@@ -255,7 +256,7 @@
      *  @param {Object} request
      *  @returns {XMLHttpRequest} returns XMLHttpRequest
     \*/
-    var f_ajax = function (request) {
+    function f_ajax (request) {
         request = request || {};
 
         var result = new XMLHttpRequest();
@@ -269,7 +270,7 @@
      *  @param {Node|Array} node
      *  @param {Node|Array|String} add
     \*/
-    var f_addnode = function (node, add) {
+    function f_addnode (node, add) {
         if (!node || (node.length === 0) || !add || (add.length === 0)) {
             return;
         };
@@ -296,7 +297,7 @@
     /*\
      *  @param {Node|Array} node
     \*/
-    var f_removenode = function (node) {
+    function f_removenode (node) {
         if (!node || (node.length === 0)) {
             return;
         };
@@ -314,7 +315,7 @@
      *  @param {Node|Array} node
      *  @param {Node|Array|String} add
     \*/
-    var f_beforenode = function (node, add) {
+    function f_beforenode (node, add) {
         if (!node || (node.length === 0) || !add || (add.length === 0)) {
             return;
         };
@@ -341,7 +342,7 @@
     /*\
      *  @param {Node|Array} node
     \*/
-    var f_empty = function (node) {
+    function f_empty (node) {
         if (!node || (node.length === 0)) {
             return;
         };
@@ -367,7 +368,7 @@
      *  @param {String} selector
      *  @returns {Node} returns fined node
     \*/
-    var f_getnode = function (selector) {
+    function f_getnode (selector) {
         if (!selector) {
             return null;
         };
@@ -379,7 +380,7 @@
      *  @param {String} selector
      *  @returns {Array} returns all fined nodes
     \*/
-    var f_getnodes = function (selector) {
+    function f_getnodes (selector) {
         if (!selector) {
             return null;
         };
@@ -392,7 +393,7 @@
      *  @param {String} selector
      *  @returns {Node} returns fined node
     \*/
-    var f_findnode = function (node, selector) {
+    function f_findnode (node, selector) {
         if (!node || (node.length === 0) || !selector) {
             return null;
         };
@@ -405,7 +406,7 @@
      *  @param {String} selector
      *  @returns {Array} returns fined nodes
     \*/
-    var f_findnodes = function (node, selector) {
+    function f_findnodes (node, selector) {
         if (!node || (node.length === 0) || !selector) {
             return null;
         };
@@ -418,7 +419,7 @@
      *  @param {Number} delay
      *  @returns {Number} returns timeout number
     \*/
-    var f_delay = function (func, delay) {
+    function f_delay (func, delay) {
         if (!func) {
             return;
         };
@@ -435,7 +436,7 @@
      *  @param {String} string
      *  @returns {String} returns clear string
     \*/
-    var f_string_clear = function (string) {
+    function f_string_clear (string) {
         return string.replace(/[^a-z0-9_\-\.]+/ig, '').replace(/[\-\.]/g, '_');
     };
 
@@ -444,7 +445,7 @@
      *  @returns {String} returns new genereted string with length n
     \*/
     var v_gstring_stack = [];
-    var v_gstring_create = function (n) {
+    function v_gstring_create (n) {
         var chars = 'abcdefghijklmnopqrstuvwxyz',
             l = chars.length - 1,
             result = '';
@@ -470,7 +471,7 @@
      *  @param {String} string
      *  @returns {DocumentFragment} returns document fragment with nodes
     \*/
-    var f_string_to_fragment = function (string) {
+    function f_string_to_fragment (string) {
         var fragment = v_document.createDocumentFragment(),
             node = v_document.createElement('div');
 
@@ -495,7 +496,7 @@
      *  @param {String} string
      *  @returns {Array} returns array with nodes
     \*/
-    var f_string_to_node = function (string) {
+    function f_string_to_node (string) {
         var node = v_document.createElement('div');
 
         node.innerHTML = string;
@@ -513,7 +514,7 @@
      *  @param {Node} node
      *  @returns {Node} returns new script node
     \*/
-    var f_script_node_convert = function (node) {
+    function f_script_node_convert (node) {
         if (node.nodeName.toLowerCase() !== 'script') {
             return node;
         };
@@ -537,7 +538,7 @@
      *  @param {String|Number} marker
      *  @returns {String} returns value from data by marker
     \*/
-    var f_array_get_item = function (data, marker) {
+    function f_array_get_item (data, marker) {
         if (!data.length) {
             return;
         };
@@ -568,7 +569,7 @@
      *  @param {Number} delay
      *  @param {Function} callback
     \*/
-    var f_animation_set = function (node, add_before, remove_before, add_after, remove_after, delay, callback) {
+    function f_animation_set (node, add_before, remove_before, add_after, remove_after, delay, callback) {
         var current = node.className,
             after = function () {
                 f_addclass(node, add_after);
@@ -596,7 +597,7 @@
      *  @param {Fuction} callback
      *  @returns {Image|XMLHttpRequest} returns Image if type is 'image' and XMLHttpRequest if type is 'ajax'
     \*/
-    var f_content_load = function (url, type, property, callback) {
+    function f_content_load (url, type, property, callback) {
         var request,
             unbind = function () {
                 f_removeevent(request, 'load', success);
@@ -614,6 +615,7 @@
                 };
             },
             error = function (event) {
+
                 unbind();
 
                 if (callback) {
@@ -688,7 +690,7 @@
      *  @param {String|Array} stop
      *  @param {Function} callback
     \*/
-    var f_find_in_parents = function (node, find, stop, callback) {
+    function f_find_in_parents (node, find, stop, callback) {
         if (!node || !find || (find.length === 0)) {
             return;
         };
@@ -713,6 +715,36 @@
                 return callback(false, node);
             };
         };
+    };
+
+    /*\
+     *  Create style classes
+    \*/
+    var v_classes_done = false;
+    function f_classes_create () {
+        v_body = v_document.body;
+        v_classes_done = true;
+
+        var temp_node = document.createElement('div');
+
+        temp_node.style.position = 'absolute';
+        temp_node.style.width = '50px';
+        temp_node.style.height = '50px';
+        temp_node.style.overflow = 'scroll';
+
+        f_addnode(v_body, temp_node);
+
+        var scrollbar = parseInt(temp_node.offsetWidth) - parseInt(temp_node.clientWidth);
+
+        f_removenode(temp_node);
+
+        var temp_style = document.createElement('style');
+
+        temp_style.type = 'text/css';
+        temp_style.rel = 'stylesheet';
+        temp_style.innerHTML = '.h-scroll-top{margin-top:'+ scrollbar +'px;}.h-scroll-left{margin-left:'+ scrollbar +'px;}.h-scroll-right{margin-right:'+ scrollbar +'px;}.h-scroll-bottom{margin-bottom:'+ scrollbar +'px;}';
+ 
+        f_addnode(document.getElementsByTagName('head')[0], temp_style);
     };
 
 
@@ -768,7 +800,7 @@
         }
     };
 
-    var f_text_add = function (name, data) {
+    function f_text_add (name, data) {
         if (!name || (name === 'general')) {
             return null;
         };
@@ -780,7 +812,7 @@
         return v_text[name];
     };
 
-    var f_text_get = function (name) {
+    function f_text_get (name) {
         if (name && (name !== 'general')) {
             name = 'c_'+ f_string_clear(name);
         };
@@ -792,7 +824,7 @@
         };
     };
 
-    var f_text_get_value = function (name, prop) {
+    function f_text_get_value (name, prop) {
         if (name !== 'general') {
             name = 'c_'+ f_string_clear(name);
         };
@@ -804,7 +836,7 @@
         return v_text[name][prop];
     };
 
-    var f_text_get_list = function () {
+    function f_text_get_list () {
         var list = [];
 
         for (var key in v_text) {
@@ -841,7 +873,7 @@
             'groupAttr' : v_name.attr_group, // {String} attribute for group name
             'ajaxProperty' : {}, // {Object} options for ajax request
             'timeSave' : 60000, // {Number} keep result
-            'template' : '<div class="leafage e-window e-shut"><button class="leafage-prev e-prev" title="{{txt_prev}}"></button><button class="leafage-next e-next" title="{{txt_next}}"></button><div class="leafage-wrapper e-wrapper"><div class="leafage-content e-content"></div></div><div class="leafage-info"><button class="leafage-close e-close" title="{{txt_close}}"></button><div class="leafage-count"><span class="e-current"></span> / <span class="e-total"></span></div><div class="leafage-title e-title"></div></div><div class="leafage-preloader"></div></div>', // {string} template
+            'template' : '<div class="leafage e-window e-shut"><button class="leafage-prev e-prev" title="{{txt_prev}}"></button><button class="leafage-next e-next h-scroll-right" title="{{txt_next}}"></button><div class="leafage-wrapper e-wrapper"><div class="leafage-content e-content"></div></div><div class="leafage-info"><button class="leafage-close e-close" title="{{txt_close}}"></button><div class="leafage-count"><span class="e-current"></span> / <span class="e-total"></span></div><div class="leafage-title e-title"></div></div><div class="leafage-preloader"></div></div>', // {string} template
             'onInit' : null, // {Function} called after window init (leafage_object)
             'onOpen' : null, // {Function} called after window opening (leafage_object)
             'onClose' : null, // {Function} called before window closing (leafage_object)
@@ -852,7 +884,7 @@
         }
     };
 
-    var f_mod_add = function (name, data) {
+    function f_mod_add (name, data) {
         if (name === 'general') {
             return false;
         };
@@ -864,7 +896,7 @@
         return v_mod[name];
     };
 
-    var f_mod_get = function (name, data) {
+    function f_mod_get (name, data) {
         data = data || {};
 
         if (name && (name !== 'general')) {
@@ -878,7 +910,7 @@
         };
     };
 
-    var f_mod_get_list = function () {
+    function f_mod_get_list () {
         var list = [];
 
         for (var key in v_mod) {
@@ -893,7 +925,7 @@
 
     var v_tail_current = '';
 
-    var f_tail_add = function (id) {
+    function f_tail_add (id) {
         v_tail_current = id;
         
         v_tail.push(id);
@@ -901,7 +933,7 @@
         return true;
     };
 
-    var f_tail_remove = function (id) {
+    function f_tail_remove (id) {
         var new_tail = [];
 
         for (var i = 0, l = v_tail.length; i < l; i++) {
@@ -916,7 +948,7 @@
         return true;
     };
 
-    var f_tail_get_list = function () {
+    function f_tail_get_list () {
         return v_tail;
     };
 
@@ -944,7 +976,7 @@
 
     var v_element_stack = {};
 
-    var f_element_create = function (data) {
+    function f_element_create (data) {
         data.id = v_gstring_create(16);
 
         v_element_stack[data.id] = f_extend(v_element, data);
@@ -952,7 +984,7 @@
         return v_element_stack[data.id];
     };
 
-    var f_element_remove = function (id) {
+    function f_element_remove (id) {
         var result = [];
 
         if (f_isarray(id)) {
@@ -964,7 +996,7 @@
         };
     };
 
-    var f_element_get = function (id) {
+    function f_element_get (id) {
         var result = [];
 
         if (f_isarray(id)) {
@@ -978,7 +1010,7 @@
         };
     };
 
-    var f_element_type_detect = function (l_element, type) {
+    function f_element_type_detect (l_element, type) {
         if (!l_element.url) {
             return;
         } else if (/^(http(s)?\:)?\/\/(www\.)?(youtu\.be)/i.test(l_element.url)) {
@@ -1018,7 +1050,7 @@
         };
     };
 
-    var f_element_load = function (l_element, l_options, callback) {
+    function f_element_load (l_element, l_options, callback) {
         var type = l_element.type || l_options.type;
 
         //get content if need
@@ -1029,6 +1061,8 @@
             switch (type) {
                 case 'ajax' :
                 case 'image' :
+                    l_element.is_loading = true;
+
                     l_element.source = f_content_load(
                         l_element.url + (l_options.makeCasheReset ? (/(\?.*)$/.test(l_element.url) ? '&' : '?') + Date.now() : ''), type, l_options.ajaxProperty,
                         function (result, data, timestamp) {
@@ -1057,9 +1091,7 @@
                         }
                     );
 
-                    l_element.is_loading = true;
-
-                    break;
+                    return;
 
                 case 'find' :
                     // save content
@@ -1101,14 +1133,12 @@
             };
         };
 
-        if (!l_element.is_loading) {
-            if (callback) {
-                callback((l_element.is_error) ? 'error' : 'success');
-            };
+        if (callback) {
+            callback((l_element.is_error) ? 'error' : 'success');
         };
     };
 
-    var f_elements_create = function (data, nodes, options) {
+    function f_elements_create (data, nodes, options) {
         var prop = {},
             url_list,
             result = [];
@@ -1206,7 +1236,7 @@
 
     var v_window_stack = {};
 
-    var f_window_create = function (data) {
+    function f_window_create (data) {
         data = data || {};
 
         data.id = v_gstring_create(8);
@@ -1216,15 +1246,15 @@
         return v_window_stack[data.id];
     };
 
-    var f_window_remove = function (id) {
+    function f_window_remove (id) {
         v_window_stack[id] = null;
     };
 
-    var f_window_get = function (id) {
+    function f_window_get (id) {
         return v_window_stack[id];
     };
 
-    var f_window_template_create = function (l_window, l_options) {
+    function f_window_template_create (l_window, l_options) {
         // localize template
         var template_source = l_options.template.replace(
             /\{\{\s?(\w+)\s?\}\}/g,
@@ -1266,7 +1296,7 @@
         f_addclass(l_window.node_window, l_options.classWindow);
     };
 
-    var f_window_navigation_update = function (l_window, l_options) {
+    function f_window_navigation_update (l_window, l_options) {
         // set classes for navigation
         if (!l_options.makeLoop) {
             if (l_window.is_first) {
@@ -1282,7 +1312,7 @@
         };
     };
 
-    var f_window_open = function (l_window, l_options) {
+    function f_window_open (l_window, l_options) {
         if (l_window.is_open) {
             return;
         };
@@ -1318,7 +1348,7 @@
         l_window.is_open = true;
     };
 
-    var f_window_close = function (l_window, l_options) {
+    function f_window_close (l_window, l_options) {
         if (!l_window.is_open) {
             return;
         };
@@ -1354,7 +1384,7 @@
         l_window.is_open = false;
     };
 
-    var f_window_show = function (l_window, l_options) {
+    function f_window_show (l_window, l_options) {
         if (l_window.is_active) {
             return;
         };
@@ -1388,7 +1418,7 @@
         l_window.is_active = true;
     };
 
-    var f_window_hide = function (l_window, l_options) {
+    function f_window_hide (l_window, l_options) {
         if (!l_window.is_active) {
             return;
         };
@@ -1417,7 +1447,7 @@
         l_window.is_active = false;
     };
 
-    var f_window_set = function (l_window, l_element, l_options) {
+    function f_window_set (l_window, l_element, l_options) {
         if (l_element.is_active) {
             return;
         };
@@ -1447,7 +1477,7 @@
         l_window.is_set = true;
     };
 
-    var f_window_unset = function (l_window, l_element, l_options) {
+    function f_window_unset (l_window, l_element, l_options) {
         if (!l_element.is_active) {
             return;
         };
@@ -1505,7 +1535,7 @@
         l_window.is_set = false;
     };
 
-    var f_window_content_set = function (l_window, l_element, l_options) {
+    function f_window_content_set (l_window, l_element, l_options) {
         if (l_element.is_set) {
             return;
         };
@@ -1525,7 +1555,7 @@
             } else if (type === 'image') {
                 if (l_window.node_wrapper) {
                     l_window.node_wrapper.style.maxWidth = l_element.content.naturalWidth +'px';
-                    //l_window.node_wrapper.style.maxHeight = l_element.content.naturalHeight +'px';
+                    /*l_window.node_wrapper.style.maxHeight = l_element.content.naturalHeight +'px';*/
                 };
             };
         };
@@ -1537,7 +1567,7 @@
     };
 
 
-    var leafage_object = function () {
+    function leafage_object () {
         var that = this,
             arg = arguments;
 
@@ -1625,6 +1655,11 @@
 
         if (l_options.makeEventBind) {
             that.bind();
+        };
+
+        // create classes once
+        if (!v_classes_done) {
+            f_classes_create();
         };
 
         return that;
@@ -1771,7 +1806,7 @@
 
                 var marker = this.getAttribute(v_name.attr_id);
 
-                that.open().load(marker);
+                that.open(marker);
             };
 
             f_addevent(l_window.node_window, v_name.event_click, l_window.bind_click);
@@ -1818,7 +1853,7 @@
         return that;
     };
 
-    leafage_object.prototype.open = function () {
+    leafage_object.prototype.open = function (marker) {
         var that = this;
 
         if (that.stack.length !== 1) {
@@ -1843,7 +1878,7 @@
 
             f_window_open(l_window, l_options);
 
-            that.load();
+            that.load(marker);
         };
 
         return that;
@@ -1942,11 +1977,11 @@
                 l_element,
                 l_options,
                 function (result) {
+                    f_removeclass(l_window.node_window, v_name.class_load);
+
+                    l_window.is_loading = false;
+
                     if (result !== 'abort') {
-                        f_removeclass(l_window.node_window, v_name.class_load);
-
-                        l_window.is_loading = false;
-
                         f_window_content_set(l_window, l_element, l_options);
                     };
                 }
