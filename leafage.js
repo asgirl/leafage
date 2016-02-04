@@ -1223,7 +1223,6 @@
         'is_set' : false,
         'is_first' : false,
         'is_last' : false,
-        'is_bind' : false,
         'group' : '',
         'elements' : [],
         'elements_total' : 0,
@@ -2004,6 +2003,7 @@
         var l_element = f_element_get(l_window.element_pre);
 
         if (l_element.is_loading) {
+            //TODO: some problem in IE
             l_element.source.cancel();
         };
 

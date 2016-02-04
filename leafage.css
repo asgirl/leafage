@@ -94,6 +94,7 @@
 .leafage.f-type_image .leafage-wrapper,
 .leafage.f-type_iframe .leafage-wrapper {
     width: 100%;
+    padding: 0;
 }
 
 .leafage-content {
@@ -225,4 +226,3 @@
         z-index: 105;
     }
 }
-
